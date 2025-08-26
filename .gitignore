@@ -1,0 +1,6 @@
+
+# Ignore local development files and libraries
+__pycache__/
+local/
+trash/
+venv/
