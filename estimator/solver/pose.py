@@ -18,7 +18,7 @@ if not hasattr(np, "infty"):
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-i', '--image', type=str, default='47.png', help='Path to the input image')
+parser.add_argument('-i', '--image', type=str, default='3.png', help='Path to the input image')
 
 
 args = parser.parse_args()
@@ -163,6 +163,19 @@ def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
 
 if success:
     print("running success")
+    rvec2 = np.zeros((3,1), dtype=np.float32)
+    tvec2 = np.zeros((3,1), dtype=np.float32)
+    tvec3 = np.array([[0.0],
+                 [0.0],
+                 [0.7]], dtype=np.float32)
+    R = np.array([
+        [1, 0,  0],
+        [0, 0,  -1],
+        [0, 1, 0]
+    ], dtype=np.float32)
+
+    # Convert back to rvec
+    rvec3, _ = cv.Rodrigues(R)
     # Define 3D axis points (length = 5 cm)
     axis_length = 0.05  # meters
     axis_points = np.float32([
@@ -185,29 +198,20 @@ if success:
     vertices_cv[:, [1,2]] = vertices_cv[:, [2,1]]  # swap y and z
     vertices_cv[:,1] *= -1  # invert y
     #faces_array = faces_array.astype(np.float32)
-    rvec2 = np.zeros((3,1), dtype=np.float32)
-    tvec2 = np.zeros((3,1), dtype=np.float32)
-    tvec3 = np.array([[0.0],
-                 [0.0],
-                 [0.7]], dtype=np.float32)
-    R = np.array([
-        [1, 0,  0],
-        [0, 0,  -1],
-        [0, 1, 0]
-    ], dtype=np.float32)
 
-    # Convert back to rvec
-    rvec3, _ = cv.Rodrigues(R)
-    imgpts, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
-    #points_2d = project_points_numpy(vertices_array, rvec, tvec, cam_mat)
+    objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
+    objtoimg = np.int32(objtoimg).reshape(-1, 2)
+    # points_2d = project_points_numpy(vertices_array, rvec, tvec, cam_mat)
     # for pt in points_2d.astype(int):
     #     cv.circle(frame, tuple(pt), 5, (0,255,0), -1)
-    imgpts = np.int32(imgpts).reshape(-1, 2)
+
 
     # Draw faces
     for face in faces_array:
-        pts = imgpts[face]
-        cv.polylines(frame, [pts], True, (0,255,0), 2)
+        pts = objtoimg[face]
+        cv.polylines(frame, [pts], True, (0,255,255), 2)
+
+    #custom
     # for face in faces_array:
     #     pts = points_2d[face].astype(int)
     #     cv.polylines(frame, [pts], isClosed=True, color=(0,255,0), thickness=1)
@@ -222,9 +226,10 @@ if success:
     cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[3]), (255, 0, 0), 3) # Z - blue
     cv.imshow('img', frame)
 
+    print("img pts", imgpts)
+
     svt = SolveVectorTrimesh()
     svt.solve(rvec, tvec)
-
 
     cv.waitKey(0)
     cv.destroyAllWindows()

@@ -36,6 +36,10 @@ class SolveVectorTrimesh:
         noT[:3, :3] = R 
         Translation = tvec.flatten()
         noT[:3, 3] = Translation
+        print("Ro", Ro)
+        print("noT", noT)
+        print("tvec", tvec)
+        print("tvec flattened", Translation)
         scene = trimesh.Scene(self.mesh) 
         self.mesh.apply_transform(noT)
         scene.apply_transform(Rscene)  
