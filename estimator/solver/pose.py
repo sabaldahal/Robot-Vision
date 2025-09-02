@@ -18,7 +18,7 @@ if not hasattr(np, "infty"):
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-i', '--image', type=str, default='3.png', help='Path to the input image')
+parser.add_argument('-i', '--image', type=str, default='48.png', help='Path to the input image')
 
 
 args = parser.parse_args()
@@ -100,8 +100,9 @@ def load_obj_faces(filepath):
                 faces.append(face_indices)
     return np.array(faces, dtype=int)
 
-vertices_array = load_obj_vertices("./estimator/model/spacecraft.obj")
-faces_array = load_obj_faces("./estimator/model/spacecraft.obj")
+mesh_file = "./estimator/model/test.obj"
+vertices_array = load_obj_vertices(mesh_file)
+faces_array = load_obj_faces(mesh_file)
 
 
 success, rvec, tvec = cv.solvePnP(
