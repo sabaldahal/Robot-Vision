@@ -200,17 +200,41 @@ if success:
     vertices_cv[:,1] *= -1  # invert y
     #faces_array = faces_array.astype(np.float32)
 
-    objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
-    objtoimg = np.int32(objtoimg).reshape(-1, 2)
+
+    ##original----------------------------
+    # objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
+    # objtoimg = np.int32(objtoimg).reshape(-1, 2)
+
+    ###keep this single block commented
     # points_2d = project_points_numpy(vertices_array, rvec, tvec, cam_mat)
     # for pt in points_2d.astype(int):
     #     cv.circle(frame, tuple(pt), 5, (0,255,0), -1)
 
 
     # Draw faces
+    # for face in faces_array:
+    #     pts = objtoimg[face]
+    #     cv.polylines(frame, [pts], True, (0,255,255), 2)
+
+
+    ##original-----------------------------------
+
+
+    ###test---------------------------------------
+    matrix_file = "./estimator/solver/orientation_matrix.txt"
+    matrix_from_file = np.loadtxt(matrix_file)
+    rot_matrix_from_file = matrix_from_file[:3, :3]
+    rvec_new, _ = cv.Rodrigues(rot_matrix_from_file)
+    tvec_new = matrix_from_file[:3, 3]
+    objtoimg, _ = cv.projectPoints(vertices_array, rvec_new, tvec_new, cam_mat, dist_coeffs)
+    objtoimg = np.int32(objtoimg).reshape(-1, 2)
+    # Draw faces
     for face in faces_array:
         pts = objtoimg[face]
         cv.polylines(frame, [pts], True, (0,255,255), 2)
+
+
+    ###test------------------------------------------
 
     #custom
     # for face in faces_array:
