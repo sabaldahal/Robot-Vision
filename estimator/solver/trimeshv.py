@@ -35,20 +35,13 @@ class SolveVectorTrimesh:
                         [-y,  x,  0]])
             R = np.eye(3) + np.sin(theta)*K + (1-np.cos(theta))*(K@K)
             #analysis
-            analyzer = Analyzer()
-            analyzer.axisAngleAnalysis(axis, theta)
-            analyzer.getRvecAccuracy(rvec)
+
 
         
         noT = np.eye(4)
         noT[:3, :3] = R 
         Translation = tvec.flatten()
         noT[:3, 3] = Translation
-        print("Ro", Ro)
-        print("noT", noT)
-        print("rvec", rvec)
-        print("tvec", tvec)
-        print("tvec flattened", Translation)
         scene = trimesh.Scene(self.mesh) 
         self.mesh.apply_transform(noT)
         scene.apply_transform(Rscene)  

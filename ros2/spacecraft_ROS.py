@@ -12,6 +12,8 @@ from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
 from ultralytics import YOLO
 import numpy as np
 import time
+import json
+import cv2 as cv
 
 # Robot Configurations
 ROBOT_MODEL = 'vx300'
@@ -20,12 +22,40 @@ REF_FRAME = 'camera_color_optical_frame'
 ARM_TAG_FRAME = f'{ROBOT_NAME}/ar_tag_link'
 ARM_BASE_FRAME = f'{ROBOT_NAME}/base_link'
 
+MODEL_PATH = "./weights/best.pt"
+
+OBJ_POINTS = []
+
+coords_file = "./model/coords.json"
+keypointsArr = []
+
+with open (coords_file, "r") as f:
+    keypointsArr = json.load(f)
+
+for k in keypointsArr:
+    OBJ_POINTS.append(k['location'])
+
+OBJ_POINTS = np.array(OBJ_POINTS, dtype=np.float32)
+
+fx = 915.5166015625
+fy = 915.607421875
+cx = 629.287109375
+cy = 356.802307128906
+
+
+CAM_MAT = np.array([[fx, 0, cx],
+                    [0, fy, cy],
+                    [0, 0, 1]], dtype=np.float32)
+
+DIST_COEFFS = np.zeros((5, 1), dtype=np.float32)
+
 class Spacecraft_ROS(Node):
     def __init__(self, bot, armtag):
         super().__init__('spacecraft_ros')
         self.bot: InterbotixManipulatorXS = bot
         self.armtag: InterbotixArmTagInterface = armtag
         self.detections = []
+        self.model = YOLO(MODEL_PATH)
 
         # YOLO Detections Subscriber
         self.subscription = self.create_subscription(
@@ -48,6 +78,27 @@ class Spacecraft_ROS(Node):
             source_frame=REF_FRAME
         )
 
+        result = self.model(msg.img)[0]
+        keypoints = result.keypoints.xy.cpu().numpy()
+        bboxes = result.boxes.xyxy.cpu().numpy()
+        img_points = []
+        for kps in keypoints:
+            for x,y in kps:
+                img_points.append([x,y])
+        
+        success, rvec, tvec = cv.solvePnp(
+            OBJ_POINTS,
+            img_points,
+            CAM_MAT,
+            DIST_COEFFS
+        )
+
+        if success:
+            Rotation, _ = cv.Rodrigues(rvec)
+            Translation = np.asarray(tvec).reshape(3,1)
+
+
+
         for detection in msg.detections:
             class_name = detection.class_name
             bbox3d = detection.bbox3d
@@ -63,16 +114,28 @@ class Spacecraft_ROS(Node):
             xyz_unaligned = np.array([[0.015 - y_cam], [-z_cam], [x_cam], [1]])
             xyz_aligned = np.matmul(camera_base_trans, xyz_unaligned)
 
+            R_swap = np.array([
+                [0, -1, 0],
+                [0,  0, -1],
+                [1,  0, 0]
+            ])
+
+            R_obj_unaligned = R_swap @ Rotation
+            R_cam_to_base = camera_base_trans[:3, :3]
+            R_obj_in_base = R_cam_to_base @ R_obj_unaligned
+
+
             # Append transformed coordinates
             self.detections.append({
                 'class_name': class_name,
                 'x': round(xyz_aligned[0, 0], 3),
                 'y': round(xyz_aligned[1, 0], 3),
-                'z': round(xyz_aligned[2, 0], 3)
+                'z': round(xyz_aligned[2, 0], 3),
+                'rotation': R_obj_in_base
             })
         self.get_logger().info("YOLO Detections Transformed and Ready.")
 
-    def pick_objects(self):
+    def move_robot(self):
         """Pick and place objects based on YOLO detections."""
         if not self.detections:
             self.get_logger().warn("No YOLO detections available.")
@@ -80,7 +143,8 @@ class Spacecraft_ROS(Node):
 
         for detection in self.detections:
             x, y, z = detection['x'], detection['y'], detection['z']
-            self.get_logger().info(f"Picking object '{detection['class_name']}' at x={x}, y={y}, z={z}")
+            rotation = detection['rotation']
+            self.get_logger().info(f"Moving robot '{detection['class_name']}' at x={x}, y={y}, z={z}")
 
             # Move arm above the object
             self.bot.arm.set_ee_pose_components(x=x, y=y, z=z + 0.1, pitch=0.5)
@@ -126,14 +190,14 @@ def main():
             # Wait for a single detection
             while not yolo_node.detections and rclpy.ok():
                 rclpy.spin_once(yolo_node, timeout_sec=0.5)
-            # Check if 5 seconds have passed since last detection
-                if time.time() - last_detection_time > 5:
-                    print("\n--- No Objects Detected for 5 Seconds. Exiting Program. ---")
+            # Check if 300 seconds have passed since last detection
+                if time.time() - last_detection_time > 300:
+                    print("\n--- No Objects Detected for 300 Seconds. Exiting Program. ---")
                     return  # Exit the program
                 
             if yolo_node.detections:
                 print("\n--- New Object Detected! ---")
-                yolo_node.pick_objects()  # Pick the detected object
+                yolo_node.move_robot() 
 
                 # Update last detection time
                 last_detection_time = time.time()

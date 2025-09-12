@@ -18,7 +18,7 @@ if not hasattr(np, "infty"):
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-i', '--image', type=str, default='48.png', help='Path to the input image')
+parser.add_argument('-i', '--image', type=str, default='54.png', help='Path to the input image')
 
 
 args = parser.parse_args()
@@ -202,37 +202,52 @@ if success:
 
 
     ##original----------------------------
-    # objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
-    # objtoimg = np.int32(objtoimg).reshape(-1, 2)
+    objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
+    objtoimg = np.int32(objtoimg).reshape(-1, 2)
 
-    ###keep this single block commented
+    ###keep this block commented
     # points_2d = project_points_numpy(vertices_array, rvec, tvec, cam_mat)
     # for pt in points_2d.astype(int):
     #     cv.circle(frame, tuple(pt), 5, (0,255,0), -1)
 
 
-    # Draw faces
-    # for face in faces_array:
-    #     pts = objtoimg[face]
-    #     cv.polylines(frame, [pts], True, (0,255,255), 2)
+    #Draw faces
+    for face in faces_array:
+        pts = objtoimg[face]
+        cv.polylines(frame, [pts], True, (0,255,255), 2)
 
 
     ##original-----------------------------------
 
 
     ###test---------------------------------------
-    matrix_file = "./estimator/solver/orientation_matrix.txt"
+    matrix_file = "./estimator/solver/matrix54.txt"
+    S = np.diag([1.0, -1.0, -1.0])
     matrix_from_file = np.loadtxt(matrix_file)
-    rot_matrix_from_file = matrix_from_file[:3, :3]
-    rvec_new, _ = cv.Rodrigues(rot_matrix_from_file)
-    tvec_new = matrix_from_file[:3, 3]
-    objtoimg, _ = cv.projectPoints(vertices_array, rvec_new, tvec_new, cam_mat, dist_coeffs)
-    objtoimg = np.int32(objtoimg).reshape(-1, 2)
-    # Draw faces
-    for face in faces_array:
-        pts = objtoimg[face]
-        cv.polylines(frame, [pts], True, (0,255,255), 2)
+    R_b = matrix_from_file[:3, :3]
+    T_b = matrix_from_file[:3, 3].reshape(3,1)
+    R_b2cv = S @ R_b
+    T_b2cv = (S @ T_b).reshape(3,1)
+    rvec_new, _ = cv.Rodrigues(R_b2cv)
+    tvec_new = T_b2cv
+    print('tvec new', tvec_new)
+    print('rvec_new', rvec_new)
+    print('rot_matrix_new', R_b2cv)
+    # objtoimg, _ = cv.projectPoints(vertices_array, rvec_new, tvec_new, cam_mat, dist_coeffs)
+    # objtoimg = np.int32(objtoimg).reshape(-1, 2)
+    # # Draw faces
+    # for face in faces_array:
+    #     pts = objtoimg[face]
+    #     cv.polylines(frame, [pts], True, (0,255,255), 2)
 
+    #analysis
+    Ro, _ = cv.Rodrigues(rvec)
+    analyzer = Analyzer()
+    analyzer.getRotationError(Ro, R_b2cv)
+    analyzer.getTranslationError(tvec, tvec_new)
+
+    print("Ro",Ro)
+    print("blender ro", R_b2cv)
 
     ###test------------------------------------------
 
