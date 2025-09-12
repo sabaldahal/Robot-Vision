@@ -16,7 +16,7 @@ if not hasattr(np, "infty"):
     np.infty = np.inf
 
 import argparse
-
+y
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
 parser.add_argument('-i', '--image', type=str, default='54.png', help='Path to the input image')
 
@@ -71,6 +71,8 @@ for kps in keypoints:
 
 obj_points = np.array(obj_points, dtype=np.float32)
 img_points  = np.array(img_points,  dtype=np.float32)
+
+print("image points:", img_points)
 
 
 
