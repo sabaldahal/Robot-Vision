@@ -8,7 +8,6 @@ import numpy as np
 import sys
 sys.path.append('./estimator/solver')
 
-from o3dv import *
 from trimeshv import *
 
 
@@ -16,66 +15,9 @@ if not hasattr(np, "infty"):
     np.infty = np.inf
 
 import argparse
-y
+
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
 parser.add_argument('-i', '--image', type=str, default='54.png', help='Path to the input image')
-
-
-args = parser.parse_args()
-img_path_arg = f'./estimator/inferenceImages/{args.image}'
-
-
-
-
-
-obj_points = []
-img_points = []
-
-#ground truth keypoints
-coords_file = "./estimator/model/coords.json"
-keypointsArr = []
-with open (coords_file, "r") as f:
-    keypointsArr = json.load(f)
-
-for k in keypointsArr:
-    obj_points.append(k['location'])
-
-
-fx = 915.5166015625
-fy = 915.607421875
-cx = 629.287109375
-cy = 356.802307128906
-
-
-cam_mat = np.array([[fx, 0, cx],
-                    [0, fy, cy],
-                    [0, 0, 1]], dtype=np.float32)
-
-dist_coeffs = np.zeros((5, 1), dtype=np.float32)
-
-model_path = "./estimator/weights/best.pt"
-
-img_path = img_path_arg
-frame = cv.imread(img_path)
-
-model = YOLO(model_path)
-
-result = model(img_path)[0]
-keypoints = result.keypoints.xy.cpu().numpy()
-bboxes = result.boxes.xyxy.cpu().numpy()
-
-#detected keypoints
-for kps in keypoints:
-    for x, y in kps:
-        img_points.append([x,y])
-
-obj_points = np.array(obj_points, dtype=np.float32)
-img_points  = np.array(img_points,  dtype=np.float32)
-
-print("image points:", img_points)
-
-
-
 
 
 def load_obj_vertices(filepath):
@@ -101,20 +43,6 @@ def load_obj_faces(filepath):
                     face_indices.append(vertex_index)
                 faces.append(face_indices)
     return np.array(faces, dtype=int)
-
-mesh_file = "./estimator/model/test.obj"
-vertices_array = load_obj_vertices(mesh_file)
-faces_array = load_obj_faces(mesh_file)
-
-
-success, rvec, tvec = cv.solvePnP(
-    obj_points, 
-    img_points, 
-    cam_mat, 
-    dist_coeffs
-)
-
-import numpy as np
 
 def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
     """
@@ -164,21 +92,59 @@ def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
     return points_2d
 
 
-if success:
-    print("running success")
-    rvec2 = np.zeros((3,1), dtype=np.float32)
-    tvec2 = np.zeros((3,1), dtype=np.float32)
-    tvec3 = np.array([[0.0],
-                 [0.0],
-                 [0.7]], dtype=np.float32)
-    R = np.array([
-        [1, 0,  0],
-        [0, 0,  -1],
-        [0, 1, 0]
-    ], dtype=np.float32)
+args = parser.parse_args()
+img_path_arg = f'./estimator/inferenceImages/{args.image}'
+coords_file = "./estimator/model/coords.json"
+model_path = "./estimator/weights/best.pt"
+mesh_file = "./estimator/model/test.obj"
+matrix_file = "./estimator/solver/matrix54.txt"
+img_path = img_path_arg
+obj_points = []
+img_points = []
+keypointsArr = []
 
-    # Convert back to rvec
-    rvec3, _ = cv.Rodrigues(R)
+fx = 915.5166015625
+fy = 915.607421875
+cx = 629.287109375
+cy = 356.802307128906
+
+cam_mat = np.array([[fx, 0, cx],
+                    [0, fy, cy],
+                    [0, 0, 1]], dtype=np.float32)
+
+dist_coeffs = np.zeros((5, 1), dtype=np.float32)
+
+with open (coords_file, "r") as f:
+    keypointsArr = json.load(f)
+for k in keypointsArr:
+    obj_points.append(k['location'])
+
+
+frame = cv.imread(img_path)
+model = YOLO(model_path)
+result = model(img_path)[0]
+keypoints = result.keypoints.xy.cpu().numpy()
+bboxes = result.boxes.xyxy.cpu().numpy()
+
+#detected keypoints
+for kps in keypoints:
+    for x, y in kps:
+        img_points.append([x,y])
+
+obj_points = np.array(obj_points, dtype=np.float32)
+img_points  = np.array(img_points,  dtype=np.float32)
+
+vertices_array = load_obj_vertices(mesh_file)
+faces_array = load_obj_faces(mesh_file)
+
+success, rvec, tvec = cv.solvePnP(
+    obj_points, 
+    img_points, 
+    cam_mat, 
+    dist_coeffs
+)
+
+if success:
     # Define 3D axis points (length = 5 cm)
     axis_length = 0.05  # meters
     axis_points = np.float32([
@@ -191,17 +157,11 @@ if success:
     # Project to image
     imgpts, _ = cv.projectPoints(axis_points, rvec, tvec, cam_mat, dist_coeffs)
     imgpts = imgpts.reshape(-1, 2).astype(int)
-    origin = tuple(img_points[0])
 
-
-
-        # Project 3D points to image plane
-
+    # Project 3D points to image plane
     vertices_cv = vertices_array.copy()
     vertices_cv[:, [1,2]] = vertices_cv[:, [2,1]]  # swap y and z
     vertices_cv[:,1] *= -1  # invert y
-    #faces_array = faces_array.astype(np.float32)
-
 
     ##original----------------------------
     objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
@@ -212,18 +172,14 @@ if success:
     # for pt in points_2d.astype(int):
     #     cv.circle(frame, tuple(pt), 5, (0,255,0), -1)
 
-
     #Draw faces
     for face in faces_array:
         pts = objtoimg[face]
         cv.polylines(frame, [pts], True, (0,255,255), 2)
 
 
-    ##original-----------------------------------
-
-
-    ###test---------------------------------------
-    matrix_file = "./estimator/solver/matrix54.txt"
+    ###Compare Matrices From Blender to OpenCV---------------------------------------
+    
     S = np.diag([1.0, -1.0, -1.0])
     matrix_from_file = np.loadtxt(matrix_file)
     R_b = matrix_from_file[:3, :3]
@@ -235,12 +191,6 @@ if success:
     print('tvec new', tvec_new)
     print('rvec_new', rvec_new)
     print('rot_matrix_new', R_b2cv)
-    # objtoimg, _ = cv.projectPoints(vertices_array, rvec_new, tvec_new, cam_mat, dist_coeffs)
-    # objtoimg = np.int32(objtoimg).reshape(-1, 2)
-    # # Draw faces
-    # for face in faces_array:
-    #     pts = objtoimg[face]
-    #     cv.polylines(frame, [pts], True, (0,255,255), 2)
 
     #analysis
     Ro, _ = cv.Rodrigues(rvec)
@@ -248,18 +198,8 @@ if success:
     analyzer.getRotationError(Ro, R_b2cv)
     analyzer.getTranslationError(tvec, tvec_new)
 
-    print("Ro",Ro)
-    print("blender ro", R_b2cv)
-
-    ###test------------------------------------------
-
-    #custom
-    # for face in faces_array:
-    #     pts = points_2d[face].astype(int)
-    #     cv.polylines(frame, [pts], isClosed=True, color=(0,255,0), thickness=1)
-    #     cv.fillPoly(frame, [pts], color=(0,128,0))  # optional fill
-
-    
+    print("Predicted Rotation",Ro)
+    print("Blender Rotation", R_b2cv)
 
 
     # Draw axes on frame
@@ -267,8 +207,6 @@ if success:
     cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[2]), (0, 255, 0), 3) # Y - green
     cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[3]), (255, 0, 0), 3) # Z - blue
     cv.imshow('img', frame)
-
-    print("img pts", imgpts)
 
     svt = SolveVectorTrimesh()
     svt.solve(rvec, tvec)
