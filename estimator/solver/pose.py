@@ -1,3 +1,13 @@
+# Test file to test few features of the model
+# does the following:
+# runs inference
+# runs pnp algorithm to get the 3d coordinates of the object in camera frame
+# draws mesh with the predicted orientation on the image
+# calculates rotation and translation error
+
+
+
+
 import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
@@ -93,12 +103,11 @@ def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
 
 
 args = parser.parse_args()
-img_path_arg = f'./estimator/inferenceImages/{args.image}'
+img_path = f'./estimator/inferenceImages/{args.image}'
 coords_file = "./estimator/model/coords.json"
 model_path = "./estimator/weights/best.pt"
 mesh_file = "./estimator/model/test.obj"
-matrix_file = "./estimator/solver/matrix54.txt"
-img_path = img_path_arg
+matrix_file = "./coordinatesUtils/test matrix/t_matrix_from_blender.txt"
 obj_points = []
 img_points = []
 keypointsArr = []
@@ -137,12 +146,18 @@ img_points  = np.array(img_points,  dtype=np.float32)
 vertices_array = load_obj_vertices(mesh_file)
 faces_array = load_obj_faces(mesh_file)
 
-success, rvec, tvec = cv.solvePnP(
-    obj_points, 
-    img_points, 
-    cam_mat, 
-    dist_coeffs
-)
+try:
+    success, rvec, tvec = cv.solvePnP(
+        obj_points, 
+        img_points, 
+        cam_mat, 
+        dist_coeffs
+    )
+except Exception as ex:
+    success = False
+    print("Could not solve pose")
+    print(ex)
+
 
 if success:
     # Define 3D axis points (length = 5 cm)
@@ -200,6 +215,8 @@ if success:
 
     print("Predicted Rotation",Ro)
     print("Blender Rotation", R_b2cv)
+    print("Predicted Translation", tvec.flatten())
+    print("Blender Translation", T_b2cv)
 
 
     # Draw axes on frame
@@ -207,9 +224,6 @@ if success:
     cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[2]), (0, 255, 0), 3) # Y - green
     cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[3]), (255, 0, 0), 3) # Z - blue
     cv.imshow('img', frame)
-
-    svt = SolveVectorTrimesh()
-    svt.solve(rvec, tvec)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
