@@ -89,6 +89,7 @@ while a == 1:
     if not color_frame:
         continue
     color_image = np.asanyarray(color_frame.get_data())
+    cache_color_image = color_image
     result = model(color_image)[0]
     keypoints = result.keypoints.xy.cpu().numpy()
     bboxes = result.boxes.xyxy.cpu().numpy()
@@ -99,12 +100,17 @@ while a == 1:
             img_points.append([x,y])
     obj_points = np.array(obj_points, dtype=np.float32)
     img_points  = np.array(img_points,  dtype=np.float32)
-    success, rvec, tvec = cv.solvePnP(
-        obj_points, 
-        img_points, 
-        cam_mat, 
-        dist_coeffs
-    )
+    try:
+        success, rvec, tvec = cv.solvePnP(
+            obj_points, 
+            img_points, 
+            cam_mat, 
+            dist_coeffs
+        )
+    except:
+        print("could not solve")
+        continue
+    
 
     if success: 
         objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
