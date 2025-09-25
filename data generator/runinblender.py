@@ -1,11 +1,11 @@
 import sys
 #mac PC
-sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/practice/v2/python/blender_packages")
-sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/practice/v2/python")
+#sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/practice/v2/python/blender_packages")
+#sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/practice/v2/python")
 
 #ubuntu IRAS LAB
-#sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packages")
-#sys.path.append("/home/sabal/code/spacecraft blender/latest/python")
+sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packages")
+sys.path.append("/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator")
 
 import bpy
 from mathutils import Vector
@@ -63,7 +63,7 @@ def render(output_path):
     bpy.ops.render.render(write_still=True)
 
 
-dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/testrenders"
+dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3Test"
 
 base_dir = os.makedirs(dir, exist_ok=True)
 image_dir = os.path.join(dir, "images")
@@ -72,7 +72,7 @@ os.makedirs(image_dir, exist_ok=True)
 os.makedirs(label_dir, exist_ok=True)
 
 
-totalimages = 3
+totalimages = 3000
 image_index = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
 coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 100)

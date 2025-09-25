@@ -7,13 +7,41 @@ import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
 import random
 import math
+from typing import Tuple
+
+class Bounds():
+    def __init__(self, x:Tuple[float, float], y:Tuple[float, float], z:Tuple[float, float]):
+        self.X = x
+        self.Y = y
+        self.Z = z
+
+
+class RandomizerSettings():
+    def __init__(self):
+        self.objectBounds = None
+        self.cameraBounds = None
+        self.changeObjectPositionX = True
+        self.changeObjectPositionY = True
+        self.changeObjectPositionZ = False
+        self.changeCameraPositionX = True
+        self.changeCameraPositionY = True
+        self.changeCameraPositionZ = True
+        self.rotateObjectX = False
+        self.rotateObjectY = False
+        self.rotateObjectZ = True
 
 
 class Randomizer():
-    def __init__(self, data):
+    def __init__(self, data, settings = None):
         self.data = data
+        if settings==None:
+            self.settings = RandomizerSettings()
+            self.settings.objectBounds = Bounds(x=(-2.0, 2.0), y=(-1.215, 1.215), z=(0.93, 2.0))
+            self.settings.cameraBounds = Bounds(x=(-2.0, 2.0), y=(-1.215, 1.215), z=(0.93, 2.0))
+        else:
+            self.settings = settings
 
-    def randomize_camera_rotation(self, max_degrees=10):
+    def randomize_camera_rotation(self, max_degrees=6):
         camera = self.data.camera
         max_radians = math.radians(max_degrees)
         max_radiansz = math.radians(3)
@@ -22,9 +50,9 @@ class Randomizer():
         camera.rotation_euler[1] += random.uniform(-max_radians, max_radians)  # Y (roll)
         camera.rotation_euler[2] += random.uniform(-max_radians, max_radians) 
 
-    def set_minimum_distance(self, minDistance=0.52):
+    def set_minimum_distance(self, minDistance=0.25):
         distance = (self.data.camera.location - self.data.obj_controller.location).length
-        if(distance < 0.45):
+        if(distance < 0.25):
             d = (self.data.camera.location - self.data.obj_controller.location).normalized()
             self.data.camera.location = self.data.obj_controller.location + d * minDistance
         return (distance, minDistance)
@@ -43,34 +71,51 @@ class Randomizer():
 
     def randomize_camera_object_position(self):
         #bounds
-        tablex = (-2.0, 2.0)
-        tabley = (-1.215, 1.215)
-        tablez_exp_max_values = [2.68, 1.93, 2.2]
-        tablez = (0.93, 2)
+        objBoundsX = self.settings.objectBounds.X
+        objBoundsY = self.settings.objectBounds.Y
+        objBoundsZ = self.settings.objectBounds.Z
+        camBoundsX = self.settings.cameraBounds.X
+        camBoundsY = self.settings.cameraBounds.Y
+        camBoundsZ = self.settings.cameraBounds.Z
+
         rotation = (0, 360)
         reduce = 0.066
-        smalltablex = (tablex[0]+reduce, tablex[1] - reduce)
-        smalltabley = (tabley[0]+reduce, tabley[1] - reduce)
-        #random object orientation with positionz fixed and rotation xy fixed
+        reducedBoundsX = (objBoundsX[0]+reduce, objBoundsX[1] - reduce)
+        reducedBoundsY = (objBoundsY[0]+reduce, objBoundsY[1] - reduce)
+        #random object orientation and position
         obj = self.data.obj_controller
-        objx = random.uniform(*smalltablex)
-        objy = random.uniform(*smalltabley)
-        objRz = random.uniform(*rotation)
-        obj.location = Vector((objx, objy, obj.location.z))
-        obj.rotation_euler = (math.radians(0), math.radians(0), math.radians(objRz))
+        objx = obj.location.x
+        objy = obj.location.y
+        objz = obj.location.z
+        objRx = 0
+        objRy = 0
+        objRz = 0
+        #change coordinates
+        if self.settings.changeObjectPositionX: objx = random.uniform(*reducedBoundsX)
+        if self.settings.changeObjectPositionY: objy = random.uniform(*reducedBoundsY)
+        if self.settings.changeObjectPositionZ: objz = random.uniform(*objBoundsZ)
+
+        if self.settings.rotateObjectX: objRx = random.uniform(*rotation)
+        if self.settings.rotateObjectY: objRy = random.uniform(*rotation)
+        if self.settings.rotateObjectZ: objRz = random.uniform(*rotation)
+        
+        obj.location = Vector((objx, objy, objz))
+        obj.rotation_euler = (math.radians(objRx), math.radians(objRy), math.radians(objRz))
+
+
 
         #random camera position
-        camx = random.uniform(*tablex)
-        camy = random.uniform(*tabley)
-        camz = random.uniform(*tablez)
+        camx = random.uniform(*camBoundsX)
+        camy = random.uniform(*camBoundsY)
+        camz = random.uniform(*camBoundsZ)
         
         if random.random() > 0.15:
             self.data.camera.location = Vector((camx, camy, camz))
         self.lookAtObject()
         distance, minDistance = self.set_minimum_distance()
-        offsetVal = 0.2
+        offsetVal = 0.05
         if distance < minDistance:
-            offsetVal = 0.07
+            offsetVal = 0.015
         self.offset_camera_position(offsetVal)
         #random camera rotation
         self.randomize_camera_rotation()
