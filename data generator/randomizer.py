@@ -18,17 +18,18 @@ class Bounds():
 
 class RandomizerSettings():
     def __init__(self):
-        self.objectBounds = None
-        self.cameraBounds = None
-        self.changeObjectPositionX = True
-        self.changeObjectPositionY = True
-        self.changeObjectPositionZ = False
-        self.changeCameraPositionX = True
-        self.changeCameraPositionY = True
-        self.changeCameraPositionZ = True
-        self.rotateObjectX = False
-        self.rotateObjectY = False
-        self.rotateObjectZ = True
+        self.objectBounds:Bounds = None
+        self.cameraBounds:Bounds = None
+        self.changeObjectPositionX:bool = True
+        self.changeObjectPositionY:bool = True
+        self.changeObjectPositionZ:bool = False
+        self.changeCameraPositionX:bool = True
+        self.changeCameraPositionY:bool = True
+        self.changeCameraPositionZ:bool = True
+        self.rotateObjectX:bool = False
+        self.rotateObjectY:bool = False
+        self.rotateObjectZ:bool = True
+        self.cameraDistance:Tuple = None
 
 
 class Randomizer():
@@ -50,12 +51,13 @@ class Randomizer():
         camera.rotation_euler[1] += random.uniform(-max_radians, max_radians)  # Y (roll)
         camera.rotation_euler[2] += random.uniform(-max_radians, max_radians) 
 
-    def set_minimum_distance(self, minDistance=0.25):
+    def set_minimum_distance(self):
         distance = (self.data.camera.location - self.data.obj_controller.location).length
-        if(distance < 0.25):
+        if self.settings.cameraDistance is not None:
+            minDistance = random.uniform(*self.settings.cameraDistance)        
             d = (self.data.camera.location - self.data.obj_controller.location).normalized()
             self.data.camera.location = self.data.obj_controller.location + d * minDistance
-        return (distance, minDistance)
+        return distance
     
     def offset_camera_position(self, offsetVal=0.2):
         offset = offsetVal   
@@ -84,6 +86,7 @@ class Randomizer():
         reducedBoundsY = (objBoundsY[0]+reduce, objBoundsY[1] - reduce)
         #random object orientation and position
         obj = self.data.obj_controller
+        camera = self.data.camera
         objx = obj.location.x
         objy = obj.location.y
         objz = obj.location.z
@@ -105,20 +108,22 @@ class Randomizer():
 
 
         #random camera position
-        camx = random.uniform(*camBoundsX)
-        camy = random.uniform(*camBoundsY)
-        camz = random.uniform(*camBoundsZ)
-        
+        if self.settings.changeCameraPositionX: camx = random.uniform(*camBoundsX)
+        if self.settings.changeCameraPositionY: camy = random.uniform(*camBoundsY)
+        if self.settings.changeCameraPositionZ: camz = random.uniform(*camBoundsZ)
         if random.random() > 0.15:
             self.data.camera.location = Vector((camx, camy, camz))
         self.lookAtObject()
-        distance, minDistance = self.set_minimum_distance()
+        distance = self.set_minimum_distance()
         offsetVal = 0.05
-        if distance < minDistance:
+        if distance < 0.4:
             offsetVal = 0.015
         self.offset_camera_position(offsetVal)
         #random camera rotation
         self.randomize_camera_rotation()
+        #restore actual random z position
+        camera.location = Vector((camera.location.x, camera.location.y, camz))
+        self.lookAtObject()
 
     def randomize_lights(self):
         energyR = (1, 8)

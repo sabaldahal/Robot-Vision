@@ -55,6 +55,8 @@ data = SDGData(scene, camera, resx, resy, bottom_collection, top_collection, key
 keypoint_handler = KeyPoints(data)
 bbox_handler = BoundingBox(data)
 scene_randomizer = Randomizer(data)
+scene_randomizer.settings.cameraDistance = (0.3, 0.8)
+scene_randomizer.settings.cameraBounds.Z = (0.93, 1.3)
 data_formatter = DataFormatter(data)
 
 
@@ -63,7 +65,7 @@ def render(output_path):
     bpy.ops.render.render(write_still=True)
 
 
-dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3Test"
+dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3_final"
 
 base_dir = os.makedirs(dir, exist_ok=True)
 image_dir = os.path.join(dir, "images")
@@ -72,8 +74,9 @@ os.makedirs(image_dir, exist_ok=True)
 os.makedirs(label_dir, exist_ok=True)
 
 
-totalimages = 3000
-image_index = 0
+totalimages = 800
+image_index = 3000
+generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
 coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 100)
 next(coco_data_writer)
@@ -94,8 +97,9 @@ while totalimages > 0:
     #bbox_handler.draw_bbox(image_path, bboxData)
     data_formatter.export_data_YOLO(label_dir, image_index, bboxData, keypointsData)
     coco_data_writer.send((image_index, bboxData, keypointsData))
-    print(f"{image_index+1} images generated")
+    print(f"{generated_images+1} images generated")
     image_index += 1
+    generated_images += 1
     totalimages = totalimages - 1
 
 #save and close coco json file
