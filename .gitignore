@@ -1,7 +1,7 @@
 
 # Ignore local development files and libraries
 __pycache__/
-local/
-trash/
+**/local/
+**/trash/
 venv/
 .venv/
