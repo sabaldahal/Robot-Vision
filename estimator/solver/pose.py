@@ -105,7 +105,7 @@ def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
 args = parser.parse_args()
 img_path = f'./estimator/inferenceImages/{args.image}'
 coords_file = "./estimator/model/coords.json"
-model_path = "./estimator/weights/best.pt"
+model_path = "./estimator/weights/format_2/best.pt"
 mesh_file = "./estimator/model/test.obj"
 matrix_file = "./coordinatesUtils/test matrix/t_matrix_from_blender.txt"
 obj_points = []

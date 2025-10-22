@@ -1,0 +1,3 @@
+This format has 18 keypoints as described below:
+    -   one keypoint each at the center of the black panels at the upper half of the object.
+    -   one keypoint each at the bottom corner of every panel (blue or black) in alternating order (left or right, starting from left)

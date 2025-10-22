@@ -1,0 +1,5 @@
+This format has 14 keypoints as described below:
+    -   1 keypoint at each of the 8 corners of the entire body. (entire body does not include the head and the tail (only the yellow and blue panels))
+    -   1 keypoint at the center of each of the black panels at the upper half of the object
+    -   order of the keypoints:
+        -   check out the image description

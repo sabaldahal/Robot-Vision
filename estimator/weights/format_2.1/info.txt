@@ -1,0 +1,2 @@
+Keypoints format is same as format_2.
+In addition to format_2, this model has augmentations applied.
