@@ -6,6 +6,7 @@
 import bpy
 import json
 import os
+import re
 
 col = bpy.data.collections.get('Keypoints')
 obj = bpy.data.objects.get('scobj')
@@ -17,7 +18,25 @@ for k in col.objects:
         'location': k.location[:]
     })
 
-ks = sorted(coords, key=lambda kp: kp["name"])
+
+def tryThisToo():
+    coords = []
+    for k in col.objects:
+        local_matrix = obj.matrix_world.inverted() @ k.matrix_world
+        local_location = local_matrix.to_translation()
+        coords.append({
+            'name': k.name,
+            'location': local_location[:]
+        })    
+
+ks = sorted(
+    coords,
+    key=lambda d: (
+        re.sub(r'_\d+$', '', d['name']),
+        int(re.search(r'(\d+)$', d['name']).group())
+    )
+)
+
 
 wd = os.getcwd()
 file = os.path.join(wd, "coords.json")
