@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import numpy as np
 
 class DataFormatter():
     def __init__(self, data):
@@ -155,10 +156,7 @@ class DataFormatter():
                     json.dump(coco_data, f, indent=4)
                 print(f"[AUTO SAVE] saved file {file}")
                 totalSaved = 0
-
-
-
-            
+  
     def export_data_YOLO(self, label_dir, image_index, bbox, keypoints):
         xcenter, ycenter, width, height = self.format_bounding_box_to_YOLO(bbox)
         keypoints_yolo = self.format_keypoints_to_YOLO(keypoints)
@@ -170,4 +168,6 @@ class DataFormatter():
         with open(label_path, "w") as f:
             f.write(yolo_line + "\n")
 
-
+    def export_transformation_matrix(self, dir, image_index, matrix):
+        file = os.path.join(dir, f"{image_index:06d}.txt")
+        np.savetxt(file, matrix, fmt="%.7f")

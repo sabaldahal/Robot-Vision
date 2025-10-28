@@ -27,7 +27,7 @@ if not hasattr(np, "infty"):
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-i', '--image', type=str, default='54.png', help='Path to the input image')
+parser.add_argument('-i', '--image', type=str, default='000000.png', help='Path to the input image')
 
 
 def load_obj_vertices(filepath):
@@ -103,11 +103,13 @@ def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
 
 
 args = parser.parse_args()
-img_path = f'./estimator/inferenceImages/{args.image}'
-coords_file = "./estimator/model/coords.json"
-model_path = "./estimator/weights/format_2/best.pt"
+model_version = 'format_2.1'
+test_dataset_dir = f'./estimator/test_dataset/{model_version}'
+img_path = os.path.join(test_dataset_dir, f'images/{args.image}')
+coords_file = f"./estimator/model/coords/{model_version}/coords.json"
+model_path = f"./estimator/weights/{model_version}/best.pt"
 mesh_file = "./estimator/model/test.obj"
-matrix_file = "./coordinatesUtils/test matrix/t_matrix_from_blender.txt"
+matrix_file = os.path.join(test_dataset_dir, f'transformation_matrices/{os.path.splitext(args.image)[0]}.txt')
 obj_points = []
 img_points = []
 keypointsArr = []

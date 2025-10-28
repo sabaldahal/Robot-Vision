@@ -1,0 +1,1 @@
+./blender "/home/sabal/code/spacecraft blender/latest/SciFi Crate Basefile.blend" --background --python "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator/runinblender.py"
