@@ -1,9 +1,11 @@
 from ultralytics import YOLO
 import cv2
+import os
 
-model_path = "./estimator/weights/best.pt"
-
-img_path = "./estimator/inferenceImages/2.png"
+model_version = 'format_2.1'
+model_path = f"./estimator/weights/{model_version}/best.pt"
+test_dataset_dir = f'./estimator/test_dataset/{model_version}'
+img_path = os.path.join(test_dataset_dir, f'images/000073.png')
 img = cv2.imread(img_path)
 
 model = YOLO(model_path)
@@ -11,6 +13,7 @@ model = YOLO(model_path)
 result = model(img_path)[0]
 keypoints = result.keypoints.xy.cpu().numpy()
 bboxes = result.boxes.xyxy.cpu().numpy()
+print(keypoints)
 
 
 for kps, box in zip(keypoints, bboxes):

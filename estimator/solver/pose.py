@@ -27,7 +27,7 @@ if not hasattr(np, "infty"):
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-i', '--image', type=str, default='000000.png', help='Path to the input image')
+parser.add_argument('-i', '--image', type=str, default='000085.png', help='Path to the input image')
 
 
 def load_obj_vertices(filepath):
