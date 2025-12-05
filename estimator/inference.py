@@ -3,9 +3,9 @@ import cv2
 import os
 
 model_version = 'format_2.1'
-model_path = f"./estimator/weights/{model_version}/best.pt"
+model_path = f"./runs/pose/train2/weights/best.pt"
 test_dataset_dir = f'./estimator/test_dataset/{model_version}'
-img_path = os.path.join(test_dataset_dir, f'images/000073.png')
+img_path = os.path.join(test_dataset_dir, f'images/000000.png')
 img = cv2.imread(img_path)
 
 model = YOLO(model_path)

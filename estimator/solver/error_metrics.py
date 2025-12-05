@@ -19,7 +19,8 @@ test_dataset_dir = f'./estimator/test_dataset/{model_version}'
 images_dir = os.path.join(test_dataset_dir, 'images')
 trans_mat_dir = os.path.join(test_dataset_dir, 'transformation_matrices')
 coords_file = f"./estimator/model/coords/{model_version}/coords.json"
-model_path = f"./estimator/weights/{model_version}/best.pt"
+#model_path = f"./estimator/weights/{model_version}/best.pt"
+model_path = f'./runs/pose/train2/weights/best.pt'
 mesh_file = "./estimator/model/test.obj"
 
 obj_points = []

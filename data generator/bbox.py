@@ -52,6 +52,7 @@ class BoundingBox():
                 screen_coords.append((px, py))
         return screen_coords
 
+    #deprecate this function in the future
     def raycast_detect_corners_collection(self):
         screen_coords = []
         for a in self.data.bottom_collection.all_objects:
@@ -65,6 +66,23 @@ class BoundingBox():
             return bbox
         
         return None
+    
+    #function to calculate bounding boxes for multi class objects
+    def raycast_detect_corners_collection_multiclass(self):
+        bboxes = {}
+        for c in self.data.all_collections:
+            screen_coords = []
+            for a in c.all_objects:
+                screen_coords.extend(self.raycast_detect_corners_obj(a))
+            
+            if screen_coords:
+                xs, ys = zip(*screen_coords)
+                bbox = (min(xs), min(ys), max(xs), max(ys))
+            
+            bboxes[c.name] = bbox
+        
+        return bboxes
+            
 
     def project_bbox_to_2D(self):
         return self.raycast_detect_corners_collection()

@@ -54,6 +54,18 @@ keypoint_collection = bpy.data.collections.get('Keypoints')
 obj_controller = bpy.data.objects.get('SpacecraftController')
 lights = bpy.data.collections.get('Lights')
 
+#MULTI CLASS LABELING SET UP
+# face_a = bpy.data.collections.get('FACE A')
+# face_b = bpy.data.collections.get('FACE B')
+# face_c = bpy.data.collections.get('FACE C')
+# face_d = bpy.data.collections.get('FACE D')
+# all_classes_collection = [face_a, face_b, face_c, face_d]
+
+all_classes_collection = top_collection.children
+all_keypoints_collection = keypoint_collection.children
+
+###
+
 data = SDGData(scene, camera, resx, resy, bottom_collection, top_collection, keypoint_collection, obj_controller, lights)
 keypoint_handler = KeyPoints(data)
 bbox_handler = BoundingBox(data)
