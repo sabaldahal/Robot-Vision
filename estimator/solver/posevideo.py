@@ -89,7 +89,7 @@ while a == 1:
     if not color_frame:
         continue
     color_image = np.asanyarray(color_frame.get_data())
-    cache_color_image = color_image
+    cache_color_image = color_image.copy()
     result = model(color_image)[0]
     keypoints = result.keypoints.xy.cpu().numpy()
     bboxes = result.boxes.xyxy.cpu().numpy()
@@ -109,6 +109,8 @@ while a == 1:
         )
     except:
         print("could not solve")
+        #no drawings
+        cv.imshow("Object Cam", color_image) 
         continue
     
 
@@ -118,6 +120,9 @@ while a == 1:
         for face in faces_array:
             pts = objtoimg[face]
             cv.polylines(color_image, [pts], True, (0,255,255), 2)
+        cv.imshow("Object Cam", color_image) 
+    else:
+        #no drawings
         cv.imshow("Object Cam", color_image) 
     if cv.waitKey(1) & 0xFF == ord('q'):
         break

@@ -1,5 +1,5 @@
 class SDGData():
-    def __init__(self, scene, camera, resx, resy, bottom_collection, top_collection, all_collections, keypoint_collection, obj_controller, lights):
+    def __init__(self, scene, camera, resx, resy, bottom_collection, top_collection, all_classes_collection, all_keypoints_collection, keypoint_collection, obj_controller, lights):
         self.scene = scene
         self.camera = camera
         self.resx = resx
@@ -9,4 +9,5 @@ class SDGData():
         self.keypoint_collection = keypoint_collection
         self.obj_controller = obj_controller
         self.lights = lights
-        self.all_collections = all_collections #addded new feature to include multi-class labeling
+        self.all_classes_collection = all_classes_collection
+        self.all_keypoints_collection = all_keypoints_collection

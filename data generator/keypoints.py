@@ -11,12 +11,26 @@ import re
 
 class KeyPoints():
     def __init__(self, data):
-        self.data = data 
+        self.data = data
 
-    def project_keypoints_to_2D(self):
 
+    def project_keypoints_to_2D_from_collection(self):
+        """
+        Docstring for project_keypoints_to_2D_from_collection
+        
+        :param self: self instance of the KeyPoints class
+        :return: dictionary with collection names as keys and lists of 2D keypoint data as values
+
+        """
+        all_keypoints = {}
+        for c in self.data.all_keypoints_collection:
+            keypoints_2d = self.project_keypoints_to_2D(c)
+            all_keypoints[c.name] = keypoints_2d
+        return all_keypoints
+
+    def project_keypoints_to_2D(self, collection):
         keypoints_2d = []
-        for keypoint in self.data.keypoint_collection.objects:
+        for keypoint in collection.objects:
             world_coord = keypoint.matrix_world.translation
             camera_coord = world_to_camera_view(self.data.scene, self.data.camera, world_coord)
             px = camera_coord.x * self.data.resx
@@ -52,10 +66,7 @@ class KeyPoints():
             
         keypoints_sorted = sorted(
             keypoints_2d,
-            key=lambda d: (
-                re.sub(r'_\d+$', '', d['name']),
-                int(re.search(r'(\d+)$', d['name']).group())
-            )
+            key=lambda d: d["name"].lower()
         )
         #keypoints_sorted = sorted(keypoints_2d, key=lambda kp: kp["name"]) does not work if numbers are present 
         return keypoints_sorted
@@ -67,10 +78,12 @@ class KeyPoints():
             print(f"Could not load image: {output_path}")
             return
         
-        for k in keypoints:
-            color = (0, 255, 0) if k["occluded"] == False else (0, 255, 255)
-            cv2.circle(img, (int(k["x"]), int(k["y"])), 5, color, -1)
-            cv2.putText(img, k["name"], (int(k["x"]) + 6, int(k["y"]) - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, lineType=cv2.LINE_AA)
+        for name, kps in keypoints.items():
+            obj_color = tuple(np.random.randint(0, 255, size=3).tolist())        
+            for k in kps:
+                color = (0, 255, 0) if k["occluded"] == False else (0, 255, 255)
+                cv2.circle(img, (int(k["x"]), int(k["y"])), 5, color, -1)
+                cv2.putText(img, k["name"], (int(k["x"]) + 6, int(k["y"]) - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, lineType=cv2.LINE_AA)
 
         # Save modified image
         base, ext = os.path.splitext(output_path)

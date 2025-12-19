@@ -1,11 +1,11 @@
 import sys
 #mac PC
-#sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/practice/v2/python/blender_packages")
-#sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/practice/v2/python")
+sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/blender_packages")
+sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/data generator")
 
 #ubuntu IRAS LAB
-sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packages")
-sys.path.append("/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator")
+#sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packages")
+#sys.path.append("/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator")
 
 import bpy
 from mathutils import Vector
@@ -48,8 +48,10 @@ scene = bpy.context.scene
 camera = bpy.data.objects['RealSense Camera']
 resx = 1280
 resy = 720
-bottom_collection = bpy.data.collections.get('BOTTOM FACES')
-top_collection = bpy.data.collections.get('TOP FACES')
+
+bottom_collection = bpy.data.collections.get('BOTTOM FACES')    #remove this line for multi class support
+top_collection = bpy.data.collections.get('TOP FACES')          #remove this line for multi class support
+
 keypoint_collection = bpy.data.collections.get('Keypoints')
 obj_controller = bpy.data.objects.get('SpacecraftController')
 lights = bpy.data.collections.get('Lights')
@@ -66,22 +68,26 @@ all_keypoints_collection = keypoint_collection.children
 
 ###
 
-data = SDGData(scene, camera, resx, resy, bottom_collection, top_collection, keypoint_collection, obj_controller, lights)
+data = SDGData(scene, camera, resx, resy, bottom_collection, top_collection, all_classes_collection, all_keypoints_collection, keypoint_collection, obj_controller, lights)
 keypoint_handler = KeyPoints(data)
 bbox_handler = BoundingBox(data)
 scene_randomizer = Randomizer(data)
-scene_randomizer.settings.cameraDistance = (0.3, 0.8)
-scene_randomizer.settings.cameraBounds.Z = (0.93, 1.3)
+#scene_randomizer.settings.cameraDistance = (0.3, 0.8)
+#scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
 data_formatter = DataFormatter(data)
 transformation_matrix_calculator = TransformationMatrix(data)
 
-EXPORT_TRANFORMATION_MATRIX = True
+EXPORT_TRANFORMATION_MATRIX = False
 
 def render(output_path):
     scene.render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
-dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3_final_test_dataset"
+#ubuntu
+#dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3_final_test_dataset"
+#mac
+dir = '/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/working model/update_dec_4_2025/test_renders'
+
 
 base_dir = os.makedirs(dir, exist_ok=True)
 image_dir = os.path.join(dir, "images")
@@ -92,7 +98,7 @@ os.makedirs(label_dir, exist_ok=True)
 os.makedirs(matrix_label_dir, exist_ok=True)
 
 
-totalimages = 100
+totalimages = 1000
 image_index = 0
 generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
@@ -103,17 +109,28 @@ while totalimages > 0:
     scene_randomizer.randomize_camera_object_position()
     scene_randomizer.randomize_lights()
     bpy.context.view_layer.update()   
-    keypointsData = keypoint_handler.project_keypoints_to_2D()
+    keypointsData = keypoint_handler.project_keypoints_to_2D_from_collection()
     #check if at least 3 keypoints are visible
-    visible_count = sum(1 for kp in keypointsData if kp["occluded"] == False)
-    if visible_count < 3:
+    visible_count_total = 0
+    for kpt_list in keypointsData.values():
+        visible_count_total += sum(1 for kp in kpt_list if kp["occluded"] == False)
+    if visible_count_total < 4:
         continue
+    # visible_count = sum(1 for kp in keypointsData if kp["occluded"] == False)
+    # if visible_count < 3:
+    #     continue
     
-    bboxData = bbox_handler.project_bbox_to_2D()
+    bboxData = bbox_handler.project_bbox_to_2D_from_collection()
     render(image_path)
-    #keypoint_handler.draw_keypoints(image_path, keypointsData)
-    #bbox_handler.draw_bbox(image_path, bboxData)
-    data_formatter.export_data_YOLO(label_dir, image_index, bboxData, keypointsData)
+    
+    #temp visualization
+    #---------------------------
+    # f_bbox, f_keypoints = data_formatter.filter_objects(bboxData, keypointsData)
+    # keypoint_handler.draw_keypoints(image_path, f_keypoints)
+    # bbox_handler.draw_bbox(image_path, f_bbox)
+    #---------------------------
+
+    #data_formatter.export_data_YOLO(label_dir, image_index, bboxData, keypointsData)
     coco_data_writer.send((image_index, bboxData, keypointsData))
     if(EXPORT_TRANFORMATION_MATRIX):
         t_matrix = transformation_matrix_calculator.calculateMatrix()

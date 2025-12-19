@@ -1,7 +1,16 @@
 
 # Ignore local development files and libraries
-__pycache__/
+**/__pycache__/
 **/local/
 **/trash/
 venv/
 .venv/
+**/.DS_Store
+.DS_Store
+data generator/.DS_Store
+estimator/.DS_Store
+estimator/model/.DS_Store
+estimator/test_dataset/.DS_Store
+estimator/test_dataset/format_2.1/.DS_Store
+
+**/*.zip

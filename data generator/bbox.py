@@ -12,18 +12,23 @@ class BoundingBox():
     def __init__(self, data):
         self.data = data
 
+    # A helper funtion to draw bounding box on the image using OpenCV
+    # useful only for testing and visualization
     def draw_bbox(self, output_path, bbox):
         # Load image using OpenCV
         img = cv2.imread(output_path)
         if img is None:
             print(f"Could not load image: {output_path}")
             return
-
-        # Draw bounding box
-        color = (0, 0, 255)  # Red
-        thickness = 1
-        x1, y1, x2, y2 = bbox
-        cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), color, thickness)
+        
+        for name, coord in bbox.items():
+            x1, y1, x2, y2 = coord
+            # Draw bounding box
+            color = tuple(np.random.randint(0, 255, size=3).tolist())
+            thickness = 1
+            cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), color, thickness)
+            # Put label
+            cv2.putText(img, name, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
         # Save modified image
         base, ext = os.path.splitext(output_path)
@@ -31,7 +36,16 @@ class BoundingBox():
         cv2.imwrite(out_path, img)
         print(f"Saved with bounding box: {out_path}")
 
+
     def raycast_detect_corners_obj(self, obj):
+        """
+        Docstring for raycast_detect_corners_obj
+        
+        :param self: self instance of the BoundingBox class
+        :param obj: a single mesh object in a collection
+        :return: list of 2D screen coordinates of the object's vertices
+
+        """
         depsgraph = bpy.context.evaluated_depsgraph_get()
         obj_eval = obj.evaluated_get(depsgraph)
         mesh = obj_eval.to_mesh()
@@ -53,6 +67,7 @@ class BoundingBox():
         return screen_coords
 
     #deprecate this function in the future
+    #this function works only for a specific spacecraft model: a single body divided into two collections
     def raycast_detect_corners_collection(self):
         screen_coords = []
         for a in self.data.bottom_collection.all_objects:
@@ -68,9 +83,21 @@ class BoundingBox():
         return None
     
     #function to calculate bounding boxes for multi class objects
+    #this function works for any number of objects divided into different collections
     def raycast_detect_corners_collection_multiclass(self):
+        """
+        Docstring for raycast_detect_corners_collection_multiclass
+        
+        :param self: self instance of the BoundingBox class
+        :return: dictionary of bounding boxes for each collection
+
+        A collection is treated as a separate class. The function iterates through all collections,
+        computes the 2D screen coordinates of the vertices of all objects in each collection,
+        and calculates the bounding box for each collection. The result is returned as a dictionary
+        where the keys are collection names and the values are the corresponding bounding boxes.
+        """
         bboxes = {}
-        for c in self.data.all_collections:
+        for c in self.data.all_classes_collection:
             screen_coords = []
             for a in c.all_objects:
                 screen_coords.extend(self.raycast_detect_corners_obj(a))
@@ -84,5 +111,5 @@ class BoundingBox():
         return bboxes
             
 
-    def project_bbox_to_2D(self):
-        return self.raycast_detect_corners_collection()
+    def project_bbox_to_2D_from_collection(self):
+        return self.raycast_detect_corners_collection_multiclass()

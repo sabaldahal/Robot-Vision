@@ -6,6 +6,17 @@ import numpy as np
 class DataFormatter():
     def __init__(self, data):
         self.data = data
+        self.classes_category_map, self.keypoints_category_map = self.category_mapping()
+        for k, v in self.keypoints_category_map.items():
+            print(f"Keypoints Category Mapping: {k} -> {v}")
+
+    def category_mapping(self):
+        sorted_bboxes = sorted(self.data.all_classes_collection, key=lambda x: x.name.lower())  # case-insensitive sort
+        sorted_keypoints = sorted(self.data.all_keypoints_collection, key=lambda x: x.name.lower())  # case-insensitive sort        
+        mapping_classes = {f.name: idx + 1 for idx, f in enumerate(sorted_bboxes)}
+        mapping_keypoints = {f.name: idx + 1 for idx, f in enumerate(sorted_keypoints)}
+        print()
+        return mapping_classes, mapping_keypoints
     
     def clip_bounding_box(self, bbox):
         x, y, a, b = bbox
@@ -63,25 +74,49 @@ class DataFormatter():
             keypoints_yolo.append((x,y,v))
         return keypoints_yolo
     
+    def get_name_from_value(self, mapping, value):
+        return next((k for k, v in mapping.items() if v == value), None)
+
+    def filter_objects(self, bboxes, keypoints, min_visible=4):
+        keys_to_remove = []
+        for k,v in keypoints.items():
+            visible_count = sum(1 for kp in v if kp["occluded"] == False)
+            if visible_count < min_visible:
+                keys_to_remove.append(k)
+        for k in keys_to_remove:
+            del keypoints[k]
+            index = self.keypoints_category_map.get(k)
+            key_to_delete = self.get_name_from_value(self.classes_category_map, index)
+            del bboxes[key_to_delete]
+        return bboxes, keypoints
+    
+    def get_corresponding_bbox(self, bboxes, index):
+        name = self.get_name_from_value(self.classes_category_map, index)
+        bbox = bboxes.get(name)
+        x, y, w, h = self.format_bounding_box_to_COCO(bbox)
+        return [x, y, w, h]
+    
+    def get_bbox_area(self, bboxes, index):
+        name = self.get_name_from_value(self.classes_category_map, index)
+        bbox = bboxes.get(name)
+        x, y, w, h = self.format_bounding_box_to_COCO(bbox)
+        area = w * h
+        return area
+    
+
     def export_data_COCO(self, file, saveAfterIterations):
         coco_data = None
+        superCategory = "SpaceCrafts"
         if os.path.exists(file):
             with open(file, "r") as f:
                 coco_data = json.load(f)
             print(f"Json file opened: {file}")
         else:
-            keypoints_name_ascending = sorted(
-                (item.name for item in self.data.keypoint_collection.objects),
-                key=lambda n: (
-                    re.sub(r'_\d+$', '', n),                 # prefix
-                    int(re.search(r'(\d+)$', n).group())     # numeric part
-                )
-            )
             coco_data = {
                 "info":
                 {
                     "description": "Spacecraft dataset",
-                    "url": "www.google.com",
+                    "url": "unspecified",
                     "version": "1.0",
                     "year": 2025,
                     "contributor": "Sabal Dahal",
@@ -97,16 +132,21 @@ class DataFormatter():
                 [
                     {
                         "id": 0,
-                        "name": "SpaceCrafts",
+                        "name": superCategory,
                         "supercategory": "none"
                     },
-                    {
-                        "id": 1,
-                        "name": "spacecraft",
-                        "supercategory": "SpaceCrafts",
-                        "keypoints": keypoints_name_ascending,
-                        "skeleton": []
-                    }
+                    *(
+                        {
+                            "id": self.keypoints_category_map[kp_collection.name],
+                            "name": kp_collection.name,
+                            "supercategory": superCategory,
+                            "keypoints": sorted(
+                                                    (item.name for item in kp_collection.objects),
+                                                    key=lambda n: n.lower()
+                                                ),
+                            "skeleton": []
+                        } for kp_collection in self.data.all_keypoints_collection
+                    )
                 ],
                 "images": [],
                 "annotations": []
@@ -122,9 +162,9 @@ class DataFormatter():
                 return
             
             image_index, bbox, keypoints = data
-            x, y, w, h = self.format_bounding_box_to_COCO(bbox)
-            area = w * h
-            keypoints_coco = self.format_keypoints_to_COCO(keypoints)
+
+            bbox, keypoints = self.filter_objects(bbox, keypoints)
+            
             coco_data["images"].append(
                 {
                     "id": image_index,
@@ -133,22 +173,20 @@ class DataFormatter():
                     "height": self.data.resy
                 }
             )
-            coco_data["annotations"].append(
-                {
-                    "id": image_index,
-                    "image_id": image_index,
-                    "category_id": 1,
-                    "bbox": [
-                        x,
-                        y,
-                        w,
-                        h
-                    ],
-                    "area": area,
-                    "segmentation": [],
-                    "iscrowd": 0,
-                    "keypoints": keypoints_coco,
-                }
+            coco_data["annotations"].extend(
+                [
+                    {
+                        "id": image_index,
+                        "image_id": image_index,
+                        "category_id": self.keypoints_category_map[name],
+                        "bbox": self.get_corresponding_bbox(bbox, self.keypoints_category_map[name]),
+                        "area": self.get_bbox_area(bbox, self.keypoints_category_map[name]),
+                        "segmentation": [],
+                        "iscrowd": 0,
+                        "keypoints": self.format_keypoints_to_COCO(values)
+                    }
+                    for i, (name, values) in enumerate(keypoints.items())
+                ]
             )
             totalSaved += 1
             if totalSaved >= saveAfterIterations:
