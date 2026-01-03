@@ -98,7 +98,7 @@ os.makedirs(label_dir, exist_ok=True)
 os.makedirs(matrix_label_dir, exist_ok=True)
 
 
-totalimages = 5000
+totalimages = 6000
 image_index = 0
 generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
@@ -106,6 +106,9 @@ coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 100)
 next(coco_data_writer)
 while totalimages > 0:        
     image_path = os.path.join(image_dir, f"{image_index:06d}.png")
+    if generated_images == 4000:
+        scene_randomizer.settings.cameraDistance = (0.3, 0.8)
+        scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
     scene_randomizer.randomize_camera_object_position()
     scene_randomizer.randomize_lights()
     bpy.context.view_layer.update()   

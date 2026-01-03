@@ -76,7 +76,6 @@ class Randomizer():
     def lookAtObject(self):
         distance = (self.data.obj_controller.location - self.data.camera.location).length
         width = self.camera_x_coverage(self.data.camera, distance)
-        print(f'width is {width}')
         camera_angle_offset = (-width // 2, width // 2)
         offset = random.uniform(*camera_angle_offset)    
         direction = self.data.obj_controller.location - self.data.camera.location
