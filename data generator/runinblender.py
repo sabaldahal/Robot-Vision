@@ -98,7 +98,7 @@ os.makedirs(label_dir, exist_ok=True)
 os.makedirs(matrix_label_dir, exist_ok=True)
 
 
-totalimages = 1000
+totalimages = 5000
 image_index = 0
 generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")

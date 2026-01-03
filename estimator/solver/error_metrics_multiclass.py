@@ -28,9 +28,7 @@ test_output_version = '2'
 os.makedirs(f'./estimator/test results/{test_output_version}', exist_ok=True)
 outputfile = f'./estimator/test results/{test_output_version}/pose_errors.csv'
 
-obj_points = []
 
-RESULTS = []
 
 fx = 915.5166015625
 fy = 915.607421875
@@ -43,16 +41,21 @@ cam_mat = np.array([[fx, 0, cx],
 
 dist_coeffs = np.zeros((5, 1), dtype=np.float32)
 
-with open (coords_file, "r") as f:
-    keypointsArr = json.load(f)
-for k in keypointsArr:
-    obj_points.append(k['location'])
 
 model = YOLO(model_path)
 
+with open (coords_file, "r") as f:
+    keypointsArr = json.load(f)
+
+obj_points = []
+img_points = []
+RESULTS = []
+
+
+
 for img_name in sorted(os.listdir(images_dir)):
     img_points = []
-    keypointsArr = []
+    obj_points = []
 
     if not img_name.lower().endswith(('.png', '.jpg', '.jpeg')):
         continue
@@ -67,11 +70,27 @@ for img_name in sorted(os.listdir(images_dir)):
     result = model(img_path)[0]
     keypoints = result.keypoints.xy.cpu().numpy()
     bboxes = result.boxes.xyxy.cpu().numpy()
+    class_names = result.names
+    classes_predicted = result.boxes.cls.cpu().numpy().astype(int)
 
-    #detected keypoints
-    for kps in keypoints:
+    predicted_keypoints = {}
+
+#detected keypoints
+    for kps, cls_id in zip(keypoints, classes_predicted):
+        p_class_name = class_names[cls_id]
+        arr = []
         for x, y in kps:
-            img_points.append([x,y])
+            #img_points.append([x,y])
+            arr.append([x,y])
+        predicted_keypoints[p_class_name] = arr
+
+    #match and filter
+    filtered_keypoints = {k: v for k, v in keypointsArr.items() if k in predicted_keypoints}
+    for k,v in predicted_keypoints.items():
+        for t in v:
+            img_points.append(t)
+        for c in filtered_keypoints[k]:
+            obj_points.append(c['location'])
 
     obj_points = np.array(obj_points, dtype=np.float32)
     img_points  = np.array(img_points,  dtype=np.float32)

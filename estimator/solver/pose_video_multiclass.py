@@ -82,6 +82,7 @@ a = 1
 
 while a == 1:
     img_points = []
+    obj_points = []
     frames = pipeline.wait_for_frames()
     color_frame = frames.get_color_frame()
     if not color_frame:

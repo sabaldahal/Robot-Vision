@@ -83,6 +83,15 @@ class DataFormatter():
             visible_count = sum(1 for kp in v if kp["occluded"] == False)
             if visible_count < min_visible:
                 keys_to_remove.append(k)
+            # 
+            #this section is specifically wriiten for spacecraft case - keypoint label version 3
+            #may or may not work with other objects and other keypoint label version for the spacecraft
+            #
+            # filter the classes based on the minimum width in pixels
+            #------start------
+            else:
+                if abs(v[0]["x"] - v[1]["x"]) < 4: #specify the number of pixels
+                    keys_to_remove.append(k)
         for k in keys_to_remove:
             del keypoints[k]
             index = self.keypoints_category_map.get(k)

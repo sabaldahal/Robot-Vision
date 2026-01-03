@@ -1,7 +1,7 @@
 import sys
 
 import bpy
-from mathutils import Vector, Euler, Quaternion
+from mathutils import Vector, Euler, Quaternion, Matrix
 from bpy import context
 import numpy as np
 from bpy_extras.object_utils import world_to_camera_view
@@ -66,10 +66,36 @@ class Randomizer():
         offsetVector = Vector((ox, oy, 0))
         self.data.camera.location = self.data.camera.location + offsetVector
         
+    def camera_x_coverage(self, cam, distance):
+        # Horizontal FOV in radians
+        fov_x = 2 * math.atan(cam.data.sensor_width / (2 * cam.data.lens))
+        # Full width at distance
+        width = 2 * distance * math.tan(fov_x / 2)
+        return width
+    
     def lookAtObject(self):
+        distance = (self.data.obj_controller.location - self.data.camera.location).length
+        width = self.camera_x_coverage(self.data.camera, distance)
+        print(f'width is {width}')
+        camera_angle_offset = (-width // 2, width // 2)
+        offset = random.uniform(*camera_angle_offset)    
         direction = self.data.obj_controller.location - self.data.camera.location
         rot_quat = direction.to_track_quat('-Z', 'Y')
         self.data.camera.rotation_euler = rot_quat.to_euler()
+        #offset the angle
+        theta_rad = math.atan2(offset, distance)
+        local_y_world = self.data.camera.matrix_world.to_3x3() @ Vector((0, 1, 0))
+        q = Quaternion(local_y_world, theta_rad)
+        self.data.camera.rotation_euler = (q @ self.data.camera.rotation_euler.to_quaternion()).to_euler()
+        # print(distance)
+        # offset_magnitude = -6
+        # local_vector = Vector((offset_magnitude, 0, 0)) # The movement we want in local space
+        # world_vector = self.data.camera.matrix_world.to_3x3() @ local_vector
+        # offset_location = self.data.camera.location + world_vector
+
+        # direction = self.data.obj_controller.location - offset_location
+        # rot_quat = direction.to_track_quat('-Z', 'Y')
+        # self.data.camera.rotation_euler = rot_quat.to_euler()
 
     def randomize_camera_object_position(self):
         #bounds
@@ -111,19 +137,23 @@ class Randomizer():
         if self.settings.changeCameraPositionX: camx = random.uniform(*camBoundsX)
         if self.settings.changeCameraPositionY: camy = random.uniform(*camBoundsY)
         if self.settings.changeCameraPositionZ: camz = random.uniform(*camBoundsZ)
-        if random.random() > 0.15:
+        if random.random() > 0.05:
             self.data.camera.location = Vector((camx, camy, camz))
-        self.lookAtObject()
         distance = self.set_minimum_distance()
-        offsetVal = 0.05
-        if distance < 0.4:
-            offsetVal = 0.015
-        self.offset_camera_position(offsetVal)
-        #random camera rotation
-        self.randomize_camera_rotation()
-        #restore actual random z position
-        camera.location = Vector((camera.location.x, camera.location.y, camz))
         self.lookAtObject()
+        
+
+        old = False
+        if old:    
+            offsetVal = 0.05
+            if distance < 0.4:
+                offsetVal = 0.015
+            self.offset_camera_position(offsetVal)
+            #random camera rotation
+            self.randomize_camera_rotation()
+            #restore actual random z position
+            camera.location = Vector((camera.location.x, camera.location.y, camz))
+            self.lookAtObject()
 
     def randomize_lights(self):
         energyR = (1, 8)
