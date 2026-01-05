@@ -80,7 +80,7 @@ class DataFormatter():
     def filter_objects(self, bboxes, keypoints, min_visible=4):
         keys_to_remove = []
         for k,v in keypoints.items():
-            visible_count = sum(1 for kp in v if kp["occluded"] == False)
+            visible_count = sum(1 for kp in v if kp["occluded"] == False and kp["inFrame"] == True)
             if visible_count < min_visible:
                 keys_to_remove.append(k)
             # 
@@ -116,10 +116,17 @@ class DataFormatter():
     def export_data_COCO(self, file, saveAfterIterations):
         coco_data = None
         superCategory = "SpaceCrafts"
+        running_annotation_id = 0
         if os.path.exists(file):
             with open(file, "r") as f:
                 coco_data = json.load(f)
             print(f"Json file opened: {file}")
+            try:
+                lastid = coco_data["annotations"][-1]["id"]
+                running_annotation_id = lastid + 1
+            except Exception as e:
+                print("Could not extract last annotation id", e)
+
         else:
             coco_data = {
                 "info":
@@ -185,7 +192,7 @@ class DataFormatter():
             coco_data["annotations"].extend(
                 [
                     {
-                        "id": image_index,
+                        "id": running_annotation_id,
                         "image_id": image_index,
                         "category_id": self.keypoints_category_map[name],
                         "bbox": self.get_corresponding_bbox(bbox, self.keypoints_category_map[name]),
@@ -197,6 +204,7 @@ class DataFormatter():
                     for i, (name, values) in enumerate(keypoints.items())
                 ]
             )
+            running_annotation_id += 1
             totalSaved += 1
             if totalSaved >= saveAfterIterations:
                 with open(file, "w") as f:

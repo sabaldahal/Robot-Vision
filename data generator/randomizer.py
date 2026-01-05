@@ -76,7 +76,7 @@ class Randomizer():
     def lookAtObject(self):
         distance = (self.data.obj_controller.location - self.data.camera.location).length
         width = self.camera_x_coverage(self.data.camera, distance)
-        camera_angle_offset = (-width // 2, width // 2)
+        camera_angle_offset = (-width // 3, width // 3)
         offset = random.uniform(*camera_angle_offset)    
         direction = self.data.obj_controller.location - self.data.camera.location
         rot_quat = direction.to_track_quat('-Z', 'Y')

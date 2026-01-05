@@ -15,6 +15,7 @@ import itertools
 import cv2
 from bpy_extras.object_utils import world_to_camera_view
 import os
+import time
 
 
 import bbox
@@ -86,7 +87,7 @@ def render(output_path):
 #ubuntu
 #dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3_final_test_dataset"
 #mac
-dir = '/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/working model/update_dec_4_2025/test_renders'
+dir = '/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/working model/update_dec_4_2025/renders_1_3_2026'
 
 
 base_dir = os.makedirs(dir, exist_ok=True)
@@ -98,34 +99,64 @@ os.makedirs(label_dir, exist_ok=True)
 os.makedirs(matrix_label_dir, exist_ok=True)
 
 
-totalimages = 6000
-image_index = 0
+from contextlib import contextmanager
+@contextmanager
+def stdout_redirected(to=os.devnull):
+    fd = sys.stdout.fileno()
+
+    def _redirect_stdout(to):
+        sys.stdout.close()
+        os.dup2(to.fileno(), fd)
+        sys.stdout = os.fdopen(fd, 'w')
+
+    with os.fdopen(os.dup(fd), 'w') as old_stdout:
+        with open(to, 'w') as file:
+            _redirect_stdout(to=file)
+        try:
+            yield
+        finally:
+            _redirect_stdout(to=old_stdout)
+
+TOTAL_IMAGES_TO_GENERATE = 1110
+totalimages = TOTAL_IMAGES_TO_GENERATE
+image_index = 4890
 generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
-coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 100)
+coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 25)
 next(coco_data_writer)
-while totalimages > 0:        
+
+#temp close up shots
+scene_randomizer.settings.cameraDistance = (0.3, 0.8)
+scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
+while totalimages > 0: 
+    starttime = time.time()       
     image_path = os.path.join(image_dir, f"{image_index:06d}.png")
-    if generated_images == 4000:
-        scene_randomizer.settings.cameraDistance = (0.3, 0.8)
-        scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
+
     scene_randomizer.randomize_camera_object_position()
     scene_randomizer.randomize_lights()
     bpy.context.view_layer.update()   
     keypointsData = keypoint_handler.project_keypoints_to_2D_from_collection()
+    bboxData = bbox_handler.project_bbox_to_2D_from_collection()
+
     #check if at least 3 keypoints are visible
-    visible_count_total = 0
-    for kpt_list in keypointsData.values():
-        visible_count_total += sum(1 for kp in kpt_list if kp["occluded"] == False)
-    if visible_count_total < 4:
+    bbcheck, kpcheck = data_formatter.filter_objects(bboxData, keypointsData)
+    if len(kpcheck) == 0:
         continue
+    # visible_count_total = 0
+    # for kpt_list in keypointsData.values():
+    #     visible_count_total += sum(1 for kp in kpt_list if kp["occluded"] == False)
+    # if visible_count_total < 4:
+    #     continue
     # visible_count = sum(1 for kp in keypointsData if kp["occluded"] == False)
     # if visible_count < 3:
     #     continue
     
-    bboxData = bbox_handler.project_bbox_to_2D_from_collection()
-    render(image_path)
-    
+
+    print("rendering...")
+    renderstarttime = time.time()
+    with stdout_redirected():
+        render(image_path)
+    rendertime = time.time() - renderstarttime
     #temp visualization
     #---------------------------
     # f_bbox, f_keypoints = data_formatter.filter_objects(bboxData, keypointsData)
@@ -139,10 +170,17 @@ while totalimages > 0:
         t_matrix = transformation_matrix_calculator.calculateMatrix()
         data_formatter.export_transformation_matrix(matrix_label_dir, image_index, t_matrix)
 
-    print(f"{generated_images+1} images generated")
+    
     image_index += 1
     generated_images += 1
     totalimages = totalimages - 1
+
+    elapsedtime = time.time() - starttime
+
+    print(f"{generated_images}/{TOTAL_IMAGES_TO_GENERATE} images generated")
+    print(f"Render time: {rendertime:.3f} seconds")
+    print(f"Render + data processing time: {elapsedtime:.3f} seconds")
+    print("----------------------------------------------------------")
 
 #save and close coco json file
 try:

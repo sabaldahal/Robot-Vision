@@ -106,7 +106,7 @@ class BoundingBox():
                 xs, ys = zip(*screen_coords)
                 bbox = (min(xs), min(ys), max(xs), max(ys))
             
-            bboxes[c.name] = bbox
+                bboxes[c.name] = bbox
         
         return bboxes
             
