@@ -7,10 +7,5 @@ venv/
 .venv/
 **/.DS_Store
 .DS_Store
-data generator/.DS_Store
-estimator/.DS_Store
-estimator/model/.DS_Store
-estimator/test_dataset/.DS_Store
-estimator/test_dataset/format_2.1/.DS_Store
 runs/
 **/*.zip
