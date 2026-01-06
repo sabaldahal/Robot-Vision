@@ -14,19 +14,22 @@ if not hasattr(np, "infty"):
     np.infty = np.inf
 
 
-model_version = 'format_3'
+model_version = 'format_2.2'
+coords_version = 'format_2.1'
 test_dataset_version = 'format_2.1'
+test_output_version = 1
+
 test_dataset_dir = f'./estimator/test_dataset/{test_dataset_version}'
 images_dir = os.path.join(test_dataset_dir, 'images')
 trans_mat_dir = os.path.join(test_dataset_dir, 'transformation_matrices')
-coords_file = f"./estimator/model/coords/{model_version}/coords.json"
+coords_file = f"./estimator/model/coords/{coords_version}/coords.json"
 model_path = f"./estimator/weights/{model_version}/best.pt"
 
 mesh_file = "./estimator/model/test.obj"
 
-test_output_version = '2'
-os.makedirs(f'./estimator/test results/{test_output_version}', exist_ok=True)
-outputfile = f'./estimator/test results/{test_output_version}/pose_errors.csv'
+test_output_version_dir = f'{model_version}_{test_output_version}'
+os.makedirs(f'./estimator/test results/{test_output_version_dir}', exist_ok=True)
+outputfile = f'./estimator/test results/{test_output_version_dir}/{model_version}_{test_output_version}_pose_errors.csv'
 
 obj_points = []
 

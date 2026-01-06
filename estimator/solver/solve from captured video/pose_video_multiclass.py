@@ -80,7 +80,7 @@ faces_array = load_obj_faces(mesh_file)
 
 a = 1
 
-video_path = "local/test.mov"
+video_path = "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/local/test_videos/realsense_color_1.avi"
 cap = cv.VideoCapture(video_path)
 
 # Check if the video was opened successfully
@@ -90,20 +90,20 @@ if not cap.isOpened():
 
 
 # ----------------------------------------------start------**************************************-----------------------------
-from scipy.spatial.transform import Rotation as R
+# from scipy.spatial.transform import Rotation as R
 
-# -----------------------------
-# Configuration
-# -----------------------------
-ALPHA_ROT = 0.1     # rotation smoothing (0.05–0.2)
-ALPHA_TRANS = 0.2   # translation smoothing
-MAX_ROT_JUMP_DEG = 25.0
+# # -----------------------------
+# # Configuration
+# # -----------------------------
+# ALPHA_ROT = 0.1     # rotation smoothing (0.05–0.2)
+# ALPHA_TRANS = 0.2   # translation smoothing
+# MAX_ROT_JUMP_DEG = 25.0
 
-# -----------------------------
-# Persistent state
-# -----------------------------
-prev_q = None
-tvec_prev = None
+# # -----------------------------
+# # Persistent state
+# # -----------------------------
+# prev_q = None
+# tvec_prev = None
 # ----------------------------------------------end-----------**************************************-----------------------------
 
 while a == 1:
@@ -113,7 +113,7 @@ while a == 1:
     ret, color_image = cap.read()
     if not ret:
         print("failed to grab frame")
-        continue 
+        break 
     # frames = pipeline.wait_for_frames()
     # color_frame = frames.get_color_frame()
 
@@ -146,120 +146,120 @@ while a == 1:
 
     obj_points = np.array(obj_points, dtype=np.float32)
     img_points  = np.array(img_points,  dtype=np.float32)
-    # try:
-    #     success, rvec, tvec = cv.solvePnP(
-    #         obj_points, 
-    #         img_points, 
-    #         cam_mat, 
-    #         dist_coeffs
-    #     )
-    # except:
-    #     print("could not solve")
-    #     #no drawings
-    #     cv.imshow("Object Cam", color_image) 
-    #     continue
-    
-
-    # if success: 
-    #     # print metrics
-    #     print("Translation Vector:", tvec.flatten())
-        
-    #     objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
-    #     objtoimg = np.int32(objtoimg).reshape(-1, 2)
-    #     for face in faces_array:
-    #         pts = objtoimg[face]
-    #         cv.polylines(color_image, [pts], True, (0,255,255), 2)
-    #     cv.imshow("Object Cam", color_image) 
-    # else:
-    #     #no drawings
-    #     cv.imshow("Object Cam", color_image) 
-# ----------------------------------------------start------**************************************-----------------------------
     try:
         success, rvec, tvec = cv.solvePnP(
-            obj_points,
-            img_points,
-            cam_mat,
-            dist_coeffs,
-            flags=cv.SOLVEPNP_ITERATIVE
+            obj_points, 
+            img_points, 
+            cam_mat, 
+            dist_coeffs
         )
-    except cv.error:
-        cv.imshow("Object Cam", color_image)
+    except:
+        print("could not solve")
+        #no drawings
+        cv.imshow("Object Cam", color_image) 
         continue
+    
 
-    if not success:
-        cv.imshow("Object Cam", color_image)
-        continue
-
-    # --------------------------------------------
-    # Pose refinement (IMPORTANT)
-    # --------------------------------------------
-    cv.solvePnPRefineLM(
-        obj_points,
-        img_points,
-        cam_mat,
-        dist_coeffs,
-        rvec,
-        tvec
-    )
-
-    # --------------------------------------------
-    # Rotation smoothing (quaternion)
-    # --------------------------------------------
-    R_curr, _ = cv.Rodrigues(rvec)
-    q_curr = R.from_matrix(R_curr).as_quat()
-
-    if prev_q is None:
-        q_filt = q_curr
+    if success: 
+        # print metrics
+        print("Translation Vector:", tvec.flatten())
+        
+        objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
+        objtoimg = np.int32(objtoimg).reshape(-1, 2)
+        for face in faces_array:
+            pts = objtoimg[face]
+            cv.polylines(color_image, [pts], True, (0,255,255), 2)
+        cv.imshow("Object Cam", color_image) 
     else:
-        # Same hemisphere
-        if np.dot(prev_q, q_curr) < 0:
-            q_curr = -q_curr
+        #no drawings
+        cv.imshow("Object Cam", color_image) 
+# ----------------------------------------------start------**************************************-----------------------------
+    # try:
+    #     success, rvec, tvec = cv.solvePnP(
+    #         obj_points,
+    #         img_points,
+    #         cam_mat,
+    #         dist_coeffs,
+    #         flags=cv.SOLVEPNP_ITERATIVE
+    #     )
+    # except cv.error:
+    #     cv.imshow("Object Cam", color_image)
+    #     continue
 
-        # Reject large jumps
-        rot_delta = (
-            R.from_quat(prev_q).inv() * R.from_quat(q_curr)
-        ).magnitude()
-        rot_delta_deg = np.degrees(rot_delta)
+    # if not success:
+    #     cv.imshow("Object Cam", color_image)
+    #     continue
 
-        if rot_delta_deg > MAX_ROT_JUMP_DEG:
-            q_filt = prev_q
-        else:
-            q_filt = (1 - ALPHA_ROT) * prev_q + ALPHA_ROT * q_curr
-            q_filt /= np.linalg.norm(q_filt)
+    # # --------------------------------------------
+    # # Pose refinement (IMPORTANT)
+    # # --------------------------------------------
+    # cv.solvePnPRefineLM(
+    #     obj_points,
+    #     img_points,
+    #     cam_mat,
+    #     dist_coeffs,
+    #     rvec,
+    #     tvec
+    # )
 
-    prev_q = q_filt
+    # # --------------------------------------------
+    # # Rotation smoothing (quaternion)
+    # # --------------------------------------------
+    # R_curr, _ = cv.Rodrigues(rvec)
+    # q_curr = R.from_matrix(R_curr).as_quat()
 
-    R_filt = R.from_quat(q_filt).as_matrix()
-    rvec_filt, _ = cv.Rodrigues(R_filt)
+    # if prev_q is None:
+    #     q_filt = q_curr
+    # else:
+    #     # Same hemisphere
+    #     if np.dot(prev_q, q_curr) < 0:
+    #         q_curr = -q_curr
 
-    # --------------------------------------------
-    # Translation smoothing
-    # --------------------------------------------
-    if tvec_prev is None:
-        tvec_filt = tvec
-    else:
-        tvec_filt = (1 - ALPHA_TRANS) * tvec_prev + ALPHA_TRANS * tvec
+    #     # Reject large jumps
+    #     rot_delta = (
+    #         R.from_quat(prev_q).inv() * R.from_quat(q_curr)
+    #     ).magnitude()
+    #     rot_delta_deg = np.degrees(rot_delta)
 
-    tvec_prev = tvec_filt
+    #     if rot_delta_deg > MAX_ROT_JUMP_DEG:
+    #         q_filt = prev_q
+    #     else:
+    #         q_filt = (1 - ALPHA_ROT) * prev_q + ALPHA_ROT * q_curr
+    #         q_filt /= np.linalg.norm(q_filt)
 
-    # --------------------------------------------
-    # Visualization (UNCHANGED LOGIC)
-    # --------------------------------------------
-    objtoimg, _ = cv.projectPoints(
-        vertices_array,
-        rvec_filt,
-        tvec_filt,
-        cam_mat,
-        dist_coeffs
-    )
+    # prev_q = q_filt
 
-    objtoimg = np.int32(objtoimg).reshape(-1, 2)
+    # R_filt = R.from_quat(q_filt).as_matrix()
+    # rvec_filt, _ = cv.Rodrigues(R_filt)
 
-    for face in faces_array:
-        pts = objtoimg[face]
-        cv.polylines(color_image, [pts], True, (0, 255, 255), 2)
+    # # --------------------------------------------
+    # # Translation smoothing
+    # # --------------------------------------------
+    # if tvec_prev is None:
+    #     tvec_filt = tvec
+    # else:
+    #     tvec_filt = (1 - ALPHA_TRANS) * tvec_prev + ALPHA_TRANS * tvec
 
-    cv.imshow("Object Cam", color_image)
+    # tvec_prev = tvec_filt
+
+    # # --------------------------------------------
+    # # Visualization (UNCHANGED LOGIC)
+    # # --------------------------------------------
+    # objtoimg, _ = cv.projectPoints(
+    #     vertices_array,
+    #     rvec_filt,
+    #     tvec_filt,
+    #     cam_mat,
+    #     dist_coeffs
+    # )
+
+    # objtoimg = np.int32(objtoimg).reshape(-1, 2)
+
+    # for face in faces_array:
+    #     pts = objtoimg[face]
+    #     cv.polylines(color_image, [pts], True, (0, 255, 255), 2)
+
+    # cv.imshow("Object Cam", color_image)
 
 # ----------------------------------------------end------**************************************-----------------------------
     if cv.waitKey(1) & 0xFF == ord('q'):

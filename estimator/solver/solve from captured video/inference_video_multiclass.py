@@ -4,7 +4,7 @@ import os
 
 model_version = 'format_3.1'
 model_path = f"./estimator/weights/{model_version}/best.pt"
-video_path = "local/test.mov"
+video_path = "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/local/test_videos/realsense_color_1.avi"
 cap = cv2.VideoCapture(video_path)
 
 # Check if the video was opened successfully
