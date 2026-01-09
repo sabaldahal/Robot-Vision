@@ -40,7 +40,7 @@ def load_obj_faces(filepath):
 
 
 coords_file = "./estimator/model/coords/format_3/coords.json"
-model_path = "./estimator/weights/format_3.1/best.pt"
+model_path = "./estimator/weights/format_3.3/best.pt"
 mesh_file = "./estimator/model/test.obj"
 obj_points = []
 img_points = []
@@ -105,8 +105,19 @@ if not cap.isOpened():
 # prev_q = None
 # tvec_prev = None
 # ----------------------------------------------end-----------**************************************-----------------------------
+import datetime
 
-while a == 1:
+paused = False
+while cap.isOpened():
+    key = cv.waitKey(25) & 0xFF
+    if key == ord('q'): # Press 'q' to exit
+        break
+    elif key == ord('p'): # Press 'p' to pause/resume
+        paused = not paused
+
+    if paused:
+        continue
+
     img_points = []
     obj_points = []
 
@@ -114,12 +125,17 @@ while a == 1:
     if not ret:
         print("failed to grab frame")
         break 
-    # frames = pipeline.wait_for_frames()
-    # color_frame = frames.get_color_frame()
+    current_frame_number = cap.get(cv.CAP_PROP_POS_FRAMES)
+    time_ms = cap.get(cv.CAP_PROP_POS_MSEC)
+    seconds = int(time_ms / 1000)
+    timestamp = time_ms
+    # timestamp = str(datetime.timedelta(seconds=seconds))
 
-    # color_image = np.asanyarray(color_frame.get_data())
     cache_color_image = color_image.copy()
-    result = model(color_image)[0]
+    cv.putText(cache_color_image, f"Time: {timestamp}", (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    cv.putText(cache_color_image, f"Time: {current_frame_number}", (10, 80), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+    result = model(color_image, conf=0.7)[0]
     keypoints = result.keypoints.xy.cpu().numpy()
     bboxes = result.boxes.xyxy.cpu().numpy()
     class_names = result.names
@@ -156,7 +172,7 @@ while a == 1:
     except:
         print("could not solve")
         #no drawings
-        cv.imshow("Object Cam", color_image) 
+        cv.imshow("Object Cam", cache_color_image) 
         continue
     
 
@@ -169,101 +185,23 @@ while a == 1:
         for face in faces_array:
             pts = objtoimg[face]
             cv.polylines(color_image, [pts], True, (0,255,255), 2)
+
+
+        #adding at least puts it at the top (on Z axis layers of the image)
+        cv.putText(color_image, f"Time: {timestamp}", (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+        cv.putText(color_image, f"Time: {current_frame_number}", (10, 80), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
         cv.imshow("Object Cam", color_image) 
     else:
         #no drawings
-        cv.imshow("Object Cam", color_image) 
-# ----------------------------------------------start------**************************************-----------------------------
-    # try:
-    #     success, rvec, tvec = cv.solvePnP(
-    #         obj_points,
-    #         img_points,
-    #         cam_mat,
-    #         dist_coeffs,
-    #         flags=cv.SOLVEPNP_ITERATIVE
-    #     )
-    # except cv.error:
-    #     cv.imshow("Object Cam", color_image)
-    #     continue
+        cv.imshow("Object Cam", cache_color_image) 
 
-    # if not success:
-    #     cv.imshow("Object Cam", color_image)
-    #     continue
 
-    # # --------------------------------------------
-    # # Pose refinement (IMPORTANT)
-    # # --------------------------------------------
-    # cv.solvePnPRefineLM(
-    #     obj_points,
-    #     img_points,
-    #     cam_mat,
-    #     dist_coeffs,
-    #     rvec,
-    #     tvec
-    # )
+    
+    # if cv.waitKey(1) & 0xFF == ord('q'):
+    #     break
+    # Key Handling
 
-    # # --------------------------------------------
-    # # Rotation smoothing (quaternion)
-    # # --------------------------------------------
-    # R_curr, _ = cv.Rodrigues(rvec)
-    # q_curr = R.from_matrix(R_curr).as_quat()
 
-    # if prev_q is None:
-    #     q_filt = q_curr
-    # else:
-    #     # Same hemisphere
-    #     if np.dot(prev_q, q_curr) < 0:
-    #         q_curr = -q_curr
-
-    #     # Reject large jumps
-    #     rot_delta = (
-    #         R.from_quat(prev_q).inv() * R.from_quat(q_curr)
-    #     ).magnitude()
-    #     rot_delta_deg = np.degrees(rot_delta)
-
-    #     if rot_delta_deg > MAX_ROT_JUMP_DEG:
-    #         q_filt = prev_q
-    #     else:
-    #         q_filt = (1 - ALPHA_ROT) * prev_q + ALPHA_ROT * q_curr
-    #         q_filt /= np.linalg.norm(q_filt)
-
-    # prev_q = q_filt
-
-    # R_filt = R.from_quat(q_filt).as_matrix()
-    # rvec_filt, _ = cv.Rodrigues(R_filt)
-
-    # # --------------------------------------------
-    # # Translation smoothing
-    # # --------------------------------------------
-    # if tvec_prev is None:
-    #     tvec_filt = tvec
-    # else:
-    #     tvec_filt = (1 - ALPHA_TRANS) * tvec_prev + ALPHA_TRANS * tvec
-
-    # tvec_prev = tvec_filt
-
-    # # --------------------------------------------
-    # # Visualization (UNCHANGED LOGIC)
-    # # --------------------------------------------
-    # objtoimg, _ = cv.projectPoints(
-    #     vertices_array,
-    #     rvec_filt,
-    #     tvec_filt,
-    #     cam_mat,
-    #     dist_coeffs
-    # )
-
-    # objtoimg = np.int32(objtoimg).reshape(-1, 2)
-
-    # for face in faces_array:
-    #     pts = objtoimg[face]
-    #     cv.polylines(color_image, [pts], True, (0, 255, 255), 2)
-
-    # cv.imshow("Object Cam", color_image)
-
-# ----------------------------------------------end------**************************************-----------------------------
-    if cv.waitKey(1) & 0xFF == ord('q'):
-        break
 
 
 

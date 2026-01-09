@@ -1,11 +1,18 @@
 import sys
 #mac PC
-sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/blender_packages")
-sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/data generator")
+# sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/blender_packages")
+# sys.path.append("/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/data generator")
 
 #ubuntu IRAS LAB
-#sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packages")
-#sys.path.append("/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator")
+sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packages")
+sys.path.append("/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator")
+
+#ubuntu
+dir = "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/local/test dataset"
+#mac
+# dir = '/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/working model/update_dec_4_2025/renders_1_3_2026'
+
+EXPORT_TRANFORMATION_MATRIX = True
 
 import bpy
 from mathutils import Vector
@@ -78,16 +85,13 @@ scene_randomizer = Randomizer(data)
 data_formatter = DataFormatter(data)
 transformation_matrix_calculator = TransformationMatrix(data)
 
-EXPORT_TRANFORMATION_MATRIX = False
+
 
 def render(output_path):
     scene.render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
-#ubuntu
-#dir = "/home/sabal/code/spacecraft blender/latest/blenderRender/version3_final_test_dataset"
-#mac
-dir = '/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/working model/update_dec_4_2025/renders_1_3_2026'
+
 
 
 base_dir = os.makedirs(dir, exist_ok=True)
@@ -117,17 +121,17 @@ def stdout_redirected(to=os.devnull):
         finally:
             _redirect_stdout(to=old_stdout)
 
-TOTAL_IMAGES_TO_GENERATE = 1110
+TOTAL_IMAGES_TO_GENERATE = 420
 totalimages = TOTAL_IMAGES_TO_GENERATE
-image_index = 4890
+image_index = 100
 generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
 coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 25)
 next(coco_data_writer)
 
 #temp close up shots
-scene_randomizer.settings.cameraDistance = (0.3, 0.8)
-scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
+# scene_randomizer.settings.cameraDistance = (0.3, 0.8)
+# scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
 while totalimages > 0: 
     starttime = time.time()       
     image_path = os.path.join(image_dir, f"{image_index:06d}.png")
