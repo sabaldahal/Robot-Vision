@@ -39,12 +39,19 @@ def load_obj_faces(filepath):
     return np.array(faces, dtype=int)
 
 
-coords_file = "./estimator/model/coords.json"
-model_path = "./estimator/weights/best.pt"
+
+model_version = 'format_3.3'
+coords_version = 'format_3'
+
+coords_file = f"./estimator/model/coords/{coords_version}/coords.json"
+model_path = f"./estimator/weights/{model_version}/best.pt"
 mesh_file = "./estimator/model/test.obj"
+
 obj_points = []
 img_points = []
-keypointsArr = []
+keypointsArr = None
+
+
 with open (coords_file, "r") as f:
     keypointsArr = json.load(f)
 
