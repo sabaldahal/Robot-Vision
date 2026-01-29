@@ -103,13 +103,18 @@ def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
 
 
 args = parser.parse_args()
-model_version = 'format_3'
-test_dataset_dir = f'./estimator/test_dataset/format_2.1'
-img_path = os.path.join(test_dataset_dir, f'images/{args.image}')
-coords_file = f"./estimator/model/coords/{model_version}/coords.json"
+model_version = 'format_3.3'
+coords_version = 'format_3'
+
+image_filename = '000394.png'
+test_dataset_dir = f'local/from ubuntu/test_dataset/version3'
+img_path = os.path.join(test_dataset_dir, f'images/{image_filename}')
+matrix_file = os.path.join(test_dataset_dir, f'transformation_matrices/{os.path.splitext(image_filename)[0]}.txt')
+
+
+coords_file = f"./estimator/model/coords/{coords_version}/coords.json"
 model_path = f"./estimator/weights/{model_version}/best.pt"
 mesh_file = "./estimator/model/test.obj"
-matrix_file = os.path.join(test_dataset_dir, f'transformation_matrices/{os.path.splitext(args.image)[0]}.txt')
 obj_points = []
 img_points = []
 keypointsArr = None
@@ -170,6 +175,29 @@ print('img points', img_points)
 vertices_array = load_obj_vertices(mesh_file)
 faces_array = load_obj_faces(mesh_file)
 
+
+##### DEBUG
+
+# Flip Z
+rmatrix = np.array([
+    (-1, 0, 0),
+    (0, 1, 0),
+    (0,  0, 1)
+])
+
+obj_points = np.matmul(obj_points, rmatrix)
+rmatrix = np.array([
+     (-1, 0, 0),
+     (0, -1, 0),
+     (0,  0, 1)
+ ])
+
+obj_points = np.matmul(obj_points, rmatrix)
+
+
+
+
+
 try:
     success, rvec, tvec = cv.solvePnP(
         obj_points, 
@@ -183,6 +211,19 @@ except Exception as ex:
     print(ex)
 
 
+def getaxisangle(angle_axis):
+    angle_axis = angle_axis.reshape(3)
+
+    angle = np.linalg.norm(angle_axis)
+
+    if angle > 1e-9:
+        axis = angle_axis / angle
+    else:
+        axis = np.array([1.0, 0.0, 0.0]) 
+
+    return axis, angle
+
+
 if success:
     # Define 3D axis points (length = 5 cm)
     axis_length = 0.05  # meters
@@ -193,28 +234,7 @@ if success:
         [0, 0, axis_length]          # Z axis (blue)
     ])
 
-    # Project to image
-    imgpts, _ = cv.projectPoints(axis_points, rvec, tvec, cam_mat, dist_coeffs)
-    imgpts = imgpts.reshape(-1, 2).astype(int)
 
-    # Project 3D points to image plane
-    vertices_cv = vertices_array.copy()
-    vertices_cv[:, [1,2]] = vertices_cv[:, [2,1]]  # swap y and z
-    vertices_cv[:,1] *= -1  # invert y
-
-    ##original----------------------------
-    objtoimg, _ = cv.projectPoints(vertices_array, rvec, tvec, cam_mat, dist_coeffs)
-    objtoimg = np.int32(objtoimg).reshape(-1, 2)
-
-    ###keep this block commented
-    # points_2d = project_points_numpy(vertices_array, rvec, tvec, cam_mat)
-    # for pt in points_2d.astype(int):
-    #     cv.circle(frame, tuple(pt), 5, (0,255,0), -1)
-
-    #Draw faces
-    for face in faces_array:
-        pts = objtoimg[face]
-        cv.polylines(frame, [pts], True, (0,255,255), 2)
 
 
     ###Compare Matrices From Blender to OpenCV---------------------------------------
@@ -231,6 +251,19 @@ if success:
     print('rvec_new', rvec_new)
     print('rot_matrix_new', R_b2cv)
 
+    print('rvec', rvec)
+    print('tvec', tvec)
+
+    paxis, pangle = getaxisangle(rvec)
+    print('predicted axis and angle')
+    print('axis', paxis)
+    print('angle (deg)', np.degrees(pangle))
+
+    aaxis, aangle = getaxisangle(rvec_new)
+    print('actual axis and angle')
+    print('axis', aaxis)
+    print('angle (deg)', np.degrees(aangle))
+
     #analysis
     Ro, _ = cv.Rodrigues(rvec)
     analyzer = Analyzer()
@@ -245,6 +278,50 @@ if success:
     print("Rotational Error: ", rot_error)
     print("Translation Error: ", t_error)
 
+
+    ###DEBUG-------------
+
+
+
+
+
+    draw_truth = False
+
+    
+
+    draw_rvec = rvec
+    draw_tvec = tvec
+
+    if draw_truth:
+        draw_rvec = rvec_new
+        draw_tvec = tvec_new
+
+
+    
+
+
+    # Project to image
+    imgpts, _ = cv.projectPoints(axis_points, draw_rvec, draw_tvec, cam_mat, dist_coeffs)
+    imgpts = imgpts.reshape(-1, 2).astype(int)
+
+    # Project 3D points to image plane
+    vertices_cv = vertices_array.copy()
+    vertices_cv[:, [1,2]] = vertices_cv[:, [2,1]]  # swap y and z
+    vertices_cv[:,1] *= -1  # invert y
+
+    ##original----------------------------
+    objtoimg, _ = cv.projectPoints(vertices_array, draw_rvec, draw_tvec, cam_mat, dist_coeffs)
+    objtoimg = np.int32(objtoimg).reshape(-1, 2)
+
+    ###keep this block commented
+    # points_2d = project_points_numpy(vertices_array, rvec, tvec, cam_mat)
+    # for pt in points_2d.astype(int):
+    #     cv.circle(frame, tuple(pt), 5, (0,255,0), -1)
+
+    #Draw faces
+    for face in faces_array:
+        pts = objtoimg[face]
+        cv.polylines(frame, [pts], True, (0,255,255), 2)
 
     # Draw axes on frame
     cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[1]), (0, 0, 255), 3) # X - red
