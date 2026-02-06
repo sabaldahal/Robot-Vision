@@ -1,9 +1,7 @@
-import cv2 as cv
 import numpy as np
 import math
 
 class Analyzer:
-
     def getRotationError(self, R1, R2):
         R_diff = R2 @ R1.T
         trace = np.trace(R_diff)

@@ -18,7 +18,7 @@ import numpy as np
 import sys
 sys.path.append('./estimator/solver')
 
-from rvec_analyzer import *
+from estimator.modules.utils.rvec_analyzer import *
 
 
 if not hasattr(np, "infty"):
@@ -107,7 +107,7 @@ model_version = 'format_3.3'
 coords_version = 'format_3'
 
 image_filename = '000394.png'
-test_dataset_dir = f'local/from ubuntu/test_dataset/version3'
+test_dataset_dir = f'local/test_dataset/version3'
 img_path = os.path.join(test_dataset_dir, f'images/{image_filename}')
 matrix_file = os.path.join(test_dataset_dir, f'transformation_matrices/{os.path.splitext(image_filename)[0]}.txt')
 
@@ -178,22 +178,21 @@ faces_array = load_obj_faces(mesh_file)
 
 ##### DEBUG
 
-# Flip Z
-rmatrix = np.array([
-    (-1, 0, 0),
-    (0, 1, 0),
-    (0,  0, 1)
-])
+#transform
+# rmatrix = np.array([
+#     (-1, 0, 0),
+#     (0, -1, 0),
+#     (0,  0, -1)
+# ])
 
-obj_points = np.matmul(obj_points, rmatrix)
-rmatrix = np.array([
-     (-1, 0, 0),
-     (0, -1, 0),
-     (0,  0, 1)
- ])
+# obj_points = np.matmul(obj_points, rmatrix)
+# rmatrix = np.array([
+#      (-1, 0, 0),
+#      (0, -1, 0),
+#      (0,  0, 1)
+#  ])
 
-obj_points = np.matmul(obj_points, rmatrix)
-
+# obj_points = np.matmul(obj_points, rmatrix)
 
 
 
@@ -245,56 +244,114 @@ if success:
     T_b = matrix_from_file[:3, 3].reshape(3,1)
     R_b2cv = S @ R_b
     T_b2cv = (S @ T_b).reshape(3,1)
-    rvec_new, _ = cv.Rodrigues(R_b2cv)
-    tvec_new = T_b2cv
-    print('tvec new', tvec_new)
-    print('rvec_new', rvec_new)
-    print('rot_matrix_new', R_b2cv)
+    rvec_from_blender, _ = cv.Rodrigues(R_b2cv)
+    tvec_from_blender = T_b2cv
 
-    print('rvec', rvec)
-    print('tvec', tvec)
-
-    paxis, pangle = getaxisangle(rvec)
-    print('predicted axis and angle')
-    print('axis', paxis)
-    print('angle (deg)', np.degrees(pangle))
-
-    aaxis, aangle = getaxisangle(rvec_new)
-    print('actual axis and angle')
-    print('axis', aaxis)
-    print('angle (deg)', np.degrees(aangle))
 
     #analysis
     Ro, _ = cv.Rodrigues(rvec)
+
     analyzer = Analyzer()
     rot_error = analyzer.getRotationError(Ro, R_b2cv)
-    t_error = analyzer.getTranslationError(tvec, tvec_new)
+    t_error = analyzer.getTranslationError(tvec, tvec_from_blender)
 
-    print("Predicted Rotation",Ro)
-    print("Blender Rotation", R_b2cv)
-    print("Predicted Translation", tvec.flatten())
-    print("Blender Translation", T_b2cv)
+
+    print('tvec from blender', tvec_from_blender)
+    print('rvec from blender', rvec_from_blender)
+
+    print('rvec predicted', rvec)
+    print('tvec predicted', tvec)
+
+    print("Predicted Rotation Matrix", Ro)
+    print("Blender Rotation Matrix", R_b2cv)
 
     print("Rotational Error: ", rot_error)
     print("Translation Error: ", t_error)
 
+    #manipulate matrix
+    rmatrix = np.array([
+        (-1, 0, 0),
+        (0, -1, 0),
+        (0,  0, 1)
+    ])
+
+    modified_Ro = rmatrix @ Ro
+    modified_rvec, _ = cv.Rodrigues(modified_Ro)
+    modified_tvec = -tvec
+    print("Calculating Again")
+    try:
+        success, re_rvec, re_tvec = cv.solvePnP(
+            obj_points, 
+            img_points, 
+            cam_mat, 
+            dist_coeffs,
+            rvec = modified_rvec,
+            tvec = modified_tvec,
+            useExtrinsicGuess=True
+
+        )
+    except Exception as ex:
+        success = False
+        exit()
+        print("Could not solve pose")
+        print(ex)
+
+    
+
+    Re_Ro, _ = cv.Rodrigues(re_rvec)
+    rot_error = analyzer.getRotationError(Re_Ro, R_b2cv)
+    t_error = analyzer.getTranslationError(re_tvec, tvec_from_blender)
+
+    print('Re rvec', re_rvec)
+    print('Re tvec', re_tvec)
+
+    print("Re Rotational Error: ", rot_error)
+    print("Re Translation Error: ", t_error)
+
+    paxis, pangle = getaxisangle(rvec)
+    aaxis, aangle = getaxisangle(rvec_from_blender)
+    maxis, mangle = getaxisangle(modified_rvec)
+    raxis, rangle = getaxisangle(re_rvec)
+
 
     ###DEBUG-------------
+    SAVE_TO_JSON = True
+    if SAVE_TO_JSON:
+        save_results = {}
+        save_results['predicted'] = {
+            'rvec' : list(paxis),
+            'angle' : np.degrees(pangle),
+            'tvec' : list(tvec.flatten())
+        }
+        save_results['truth'] = {
+            'rvec' : list(aaxis),
+            'angle' : np.degrees(aangle),
+            'tvec' : list(tvec_from_blender.flatten())
+        }
+        save_results['modified'] = {
+            'rvec' : list(maxis),
+            'angle' : np.degrees(mangle),
+            'tvec' : list(modified_tvec.flatten())
+        }
+        save_results['recalculated'] = {
+            'rvec' : list(raxis),
+            'angle' : np.degrees(rangle),
+            'tvec' : list(re_tvec.flatten())
+        }
 
-
+        with open('local/debug rvecs using blender/pnp_data_file.json', 'w') as f:
+            json.dump(save_results, f, indent=4)
 
 
 
     draw_truth = False
 
-    
-
-    draw_rvec = rvec
-    draw_tvec = tvec
+    draw_rvec = re_rvec
+    draw_tvec = re_tvec
 
     if draw_truth:
-        draw_rvec = rvec_new
-        draw_tvec = tvec_new
+        draw_rvec = rvec_from_blender
+        draw_tvec = tvec_from_blender
 
 
     

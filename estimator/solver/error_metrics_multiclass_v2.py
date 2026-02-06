@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import sys
 sys.path.append('./estimator/solver')
-from rvec_analyzer import *
+from estimator.modules.utils.rvec_analyzer import *
 if not hasattr(np, "infty"):
     np.infty = np.inf
 from datetime import date
@@ -51,10 +51,6 @@ def main():
     for m in ALL_MODELS_VERSION:
         test_data_dict = get_inference_results(m)
         RESULTS.extend(test_data_dict)
-        
-
-        
-
     df = pd.DataFrame(RESULTS)
     df.to_csv(outputfile, index=False)
 
