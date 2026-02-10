@@ -83,3 +83,12 @@ def getaxisangle(angle_axis):
 
     return axis, angle
 
+def load_blender_matrix(filepath):
+    Transformation_Matrix_Blender_to_OpenCV = np.diag([1.0, -1.0, -1.0])
+    matrix_from_file = np.loadtxt(filepath)
+    R_Matrix_Blender = matrix_from_file[:3, :3]
+    Tvec_Blender = matrix_from_file[:3, 3].reshape(3,1)
+    Rvec_Blender_to_OpenCV = Transformation_Matrix_Blender_to_OpenCV @ R_Matrix_Blender
+    Tvec_Blender_to_OpenCV = (Transformation_Matrix_Blender_to_OpenCV @ Tvec_Blender).reshape(3,1)
+
+    return Rvec_Blender_to_OpenCV, Tvec_Blender_to_OpenCV

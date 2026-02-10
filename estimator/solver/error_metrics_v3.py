@@ -11,7 +11,7 @@ import cv2
 
 ALL_MODELS_VERSION = ['format_3.1', 'format_3.2', 'format_3.3', 'format_2.1', 'format_2.2']
 TEST_DATASET_VERSION = 'version3'
-TEST_OUTPUT_VERSION = 1
+TEST_OUTPUT_VERSION = 3
 DEFAULT_OUTPUT_FOLDER = 'version_2'
 OUTPUT_FOLDER = 'debug_confidence_1'
 USE_DEFAULT = False
@@ -20,13 +20,14 @@ DEBUG = True
 if USE_DEFAULT:
     OUTPUT_FOLDER = DEFAULT_OUTPUT_FOLDER
 
-test_dataset_dir = f'./estimator/test_dataset/{TEST_DATASET_VERSION}'
+
+test_dataset_dir = f'./local/test_dataset/{TEST_DATASET_VERSION}'
 images_dir = os.path.join(test_dataset_dir, 'images')
 trans_mat_dir = os.path.join(test_dataset_dir, 'transformation_matrices')
 mesh_file = "./estimator/model/test.obj"
 test_output_version_dir = f'./estimator/test results/{OUTPUT_FOLDER}/v{TEST_OUTPUT_VERSION}_{date.today()}'
 os.makedirs(test_output_version_dir, exist_ok=True)
-outputfile = f'{test_output_version_dir}/file_multiclass_{TEST_OUTPUT_VERSION}_{date.today()}_pose_errors.csv'
+outputfile = f'{test_output_version_dir}/file_{TEST_OUTPUT_VERSION}_{date.today()}_pose_errors.csv'
 
 def main():
     RESULTS = []
@@ -44,7 +45,8 @@ def get_inference_results(modelversion):
 
     yoloinstance = yolo.YOLODetect(model_path)
     pnpinstance = pnp.PoseSolver()
-    pnpinstance.initialize(coords_file, yoloinstance.get_class_names())
+    classes_name = yoloinstance.get_class_names()
+    pnpinstance.initialize(coords_file, classes_name)
 
     IS_MULTICLASS = modelversion.startswith('format_3')
     
@@ -61,31 +63,15 @@ def get_inference_results(modelversion):
 
         classes, kpts, kptsconf, bboxes, bboxesconf = yoloinstance.run_inference(frame)
 
-        #change this
-        #depending on single class or multi class
+        seed_rvec = np.zeros((3,1))
+        seed_rvec[0][0] = 1.5
+        seed_tvec = np.zeros((3,1))
+        seed_tvec[2][0] = 2
+
         if IS_MULTICLASS:
-            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes)
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes, seed_rvec, seed_tvec, True, True)
         else:
-            success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts)
-
-
-        if not success:
-            continue
-
-        if tvec[2][0] < 0:
-            rmatrix = np.array([
-                (-1, 0, 0),
-                (0, -1, 0),
-                (0,  0, 1)
-            ])
-
-            rotation_matrix_1, _ = cv2.Rodrigues(rvec)
-            modified_rotation_matrix = rmatrix @ rotation_matrix_1
-            modified_rvec, _ = cv2.Rodrigues(modified_rotation_matrix)
-            modified_tvec = -tvec
-
-            success, rvec, tvec = pnpinstance.solvepose(object_points, image_points, modified_rvec, modified_tvec, use_Extrinsic_Guess=True)
-
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts, seed_rvec, seed_tvec, True, True)
 
         if success:
             ###Compare Matrices From Blender to OpenCV---------------------------------------       
@@ -112,7 +98,7 @@ def get_inference_results(modelversion):
         confidence_dict = []
         if DEBUG:
             for kps, cls_id, b_conf, k_conf in zip(kpts, classes, bboxesconf, kptsconf):
-                p_class_name = classes[cls_id]
+                p_class_name = classes_name[cls_id]
                 index = 0
                 confidence_dict.append({
                     'Image': img_name,

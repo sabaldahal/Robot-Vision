@@ -4,8 +4,8 @@ import os
 
 model_version = 'format_3.3'
 model_path = f"./estimator/weights/{model_version}/best.pt"
-test_dataset_dir = f'local/from ubuntu/test_dataset/version3'
-img_path = os.path.join(test_dataset_dir, f'images/000394.png')
+test_dataset_dir = f'local/test_dataset/version3'
+img_path = os.path.join(test_dataset_dir, f'images/000143.png')
 img = cv2.imread(img_path)
 
 model = YOLO(model_path)
