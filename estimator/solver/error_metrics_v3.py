@@ -9,7 +9,7 @@ import cv2
 
 
 
-ALL_MODELS_VERSION = ['format_3', 'format_3.1', 'format_3.2', 'format_3.3']
+ALL_MODELS_VERSION = ['format_3.1', 'format_3.2', 'format_3.3', 'format_2.1', 'format_2.2']
 TEST_DATASET_VERSION = 'version3'
 TEST_OUTPUT_VERSION = 1
 DEFAULT_OUTPUT_FOLDER = 'version_2'
@@ -37,12 +37,16 @@ def main():
     df.to_csv(outputfile, index=False)
 
 def get_inference_results(modelversion):
-
+    results = []
     model_path = f"./estimator/weights/{modelversion}/best.pt"
     coordsversion = modelversion.split('.', 1)[0]
     coords_file = f"./estimator/model/coords/{coordsversion}/coords.json"  
 
     yoloinstance = yolo.YOLODetect(model_path)
+    pnpinstance = pnp.PoseSolver()
+    pnpinstance.initialize(coords_file, yoloinstance.get_class_names())
+
+    IS_MULTICLASS = modelversion.startswith('format_3')
     
 
     for img_name in sorted(os.listdir(images_dir)):
@@ -55,25 +59,48 @@ def get_inference_results(modelversion):
         if frame is None:
             continue  
 
-        cls, kps, kpsconf, bboxes, bboxesconf = yoloinstance.run_inference(frame)
+        classes, kpts, kptsconf, bboxes, bboxesconf = yoloinstance.run_inference(frame)
+
+        #change this
+        #depending on single class or multi class
+        if IS_MULTICLASS:
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes)
+        else:
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts)
 
 
+        if not success:
+            continue
+
+        if tvec[2][0] < 0:
+            rmatrix = np.array([
+                (-1, 0, 0),
+                (0, -1, 0),
+                (0,  0, 1)
+            ])
+
+            rotation_matrix_1, _ = cv2.Rodrigues(rvec)
+            modified_rotation_matrix = rmatrix @ rotation_matrix_1
+            modified_rvec, _ = cv2.Rodrigues(modified_rotation_matrix)
+            modified_tvec = -tvec
+
+            success, rvec, tvec = pnpinstance.solvepose(object_points, image_points, modified_rvec, modified_tvec, use_Extrinsic_Guess=True)
 
 
         if success:
             ###Compare Matrices From Blender to OpenCV---------------------------------------       
-            S = np.diag([1.0, -1.0, -1.0])
+            Transformation_Matrix_Blender_to_OpenCV = np.diag([1.0, -1.0, -1.0])
             matrix_from_file = np.loadtxt(matrix_file)
-            R_b = matrix_from_file[:3, :3]
-            T_b = matrix_from_file[:3, 3].reshape(3,1)
-            R_b2cv = S @ R_b
-            T_b2cv = (S @ T_b).reshape(3,1)
+            R_Matrix_Blender = matrix_from_file[:3, :3]
+            Tvec_Blender = matrix_from_file[:3, 3].reshape(3,1)
+            Rvec_Blender_to_OpenCV = Transformation_Matrix_Blender_to_OpenCV @ R_Matrix_Blender
+            Tvec_Blender_to_OpenCV = (Transformation_Matrix_Blender_to_OpenCV @ Tvec_Blender).reshape(3,1)
 
             #analysis
-            Ro, _ = cv.Rodrigues(rvec)
-            analyzer = Analyzer()
-            rotationalError = analyzer.getRotationError(Ro, R_b2cv)
-            translationError = analyzer.getTranslationError(tvec, T_b2cv)
+            Rotation_Matrix, _ = cv2.Rodrigues(rvec)
+            analyzer = error_analyzer.Analyzer()
+            rotationalError = analyzer.getRotationError(Rotation_Matrix, Rvec_Blender_to_OpenCV)
+            translationError = analyzer.getTranslationError(tvec, Tvec_Blender_to_OpenCV)
 
             temp_dict = {
                     "Image": img_name,
@@ -84,8 +111,8 @@ def get_inference_results(modelversion):
 
         confidence_dict = []
         if DEBUG:
-            for kps, cls_id, b_conf, k_conf in zip(keypoints, classes_predicted, boxes_conf, kps_conf):
-                p_class_name = class_names[cls_id]
+            for kps, cls_id, b_conf, k_conf in zip(kpts, classes, bboxesconf, kptsconf):
+                p_class_name = classes[cls_id]
                 index = 0
                 confidence_dict.append({
                     'Image': img_name,
@@ -117,8 +144,6 @@ def get_inference_results(modelversion):
             results.append(temp_dict)
 
     return results
-
-
 
 
 main()

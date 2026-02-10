@@ -5,109 +5,26 @@
 # draws mesh with the predicted orientation on the image
 # calculates rotation and translation error
 
-
-
-
-import cv2 as cv
+import cv2
 import numpy as np
 from ultralytics import YOLO
 import os
-import json
 import numpy as np
-
-import sys
-sys.path.append('./estimator/solver')
-
-from estimator.modules.utils.rvec_analyzer import *
-
-
-if not hasattr(np, "infty"):
-    np.infty = np.inf
-
+from modules.utils import *
+from modules.utils.threeD_mesh import *
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-i', '--image', type=str, default='000058.png', help='Path to the input image')
-
-
-def load_obj_vertices(filepath):
-    vertices = []
-    with open(filepath, 'r') as f:
-        for line in f:
-            if line.startswith('v '):  # Vertex line
-                parts = line.split()
-                # Convert x, y, z coordinates to floats
-                vertices.append([float(parts[1]), float(parts[2]), float(parts[3])])
-    return np.array(vertices)
-
-def load_obj_faces(filepath):
-    faces = []
-    with open(filepath, 'r') as f:
-        for line in f:
-            if line.startswith('f '):
-                parts = line.strip().split()
-                face_indices = []
-                for p in parts[1:]:
-                    # Handle cases like "1", "1/2", or "1/2/3"
-                    vertex_index = int(p.split('/')[0]) - 1  # Subtract 1 for 0-based indexing
-                    face_indices.append(vertex_index)
-                faces.append(face_indices)
-    return np.array(faces, dtype=int)
-
-def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
-    """
-    Project 3D points to 2D using OpenCV-style pinhole camera model.
-    No distortion applied.
-
-    Parameters:
-        objectPoints : Nx3 array of 3D points
-        rvec : 3x1 rotation vector (Rodrigues)
-        tvec : 3x1 translation vector
-        cam_mat : 3x3 camera intrinsic matrix
-
-    Returns:
-        Nx2 array of 2D points in pixel coordinates
-    """
-    objectPoints = np.asarray(objectPoints).reshape(-1,3)
-    tvec = np.asarray(tvec).reshape(3,1)
-
-    # Convert rvec to rotation matrix
-    theta = np.linalg.norm(rvec)
-    if theta < 1e-12:
-        R = np.eye(3)
-    else:
-        axis = (rvec / theta).flatten()
-        x, y, z = axis
-        K = np.array([[ 0, -z,  y],
-                      [ z,  0, -x],
-                      [-y,  x,  0]])
-        R = np.eye(3) + np.sin(theta)*K + (1-np.cos(theta))*(K@K)
-
-    print('R from custom project', R)
-    # Transform points to camera coordinates
-    points_cam = (R @ objectPoints.T) + tvec  # shape 3xN
-
-    # Perspective division
-    x = points_cam[0,:] / points_cam[2,:]
-    y = points_cam[1,:] / points_cam[2,:]
-
-    # Apply camera intrinsics
-    fx, fy = cam_mat[0,0], cam_mat[1,1]
-    cx, cy = cam_mat[0,2], cam_mat[1,2]
-
-    u = fx * x + cx
-    v = fy * y + cy
-
-    points_2d = np.vstack([u,v]).T
-    return points_2d
+parser.add_argument('-t', '--testdir', type=str, default='./local/from ubuntu/test_dataset/version3', help='Path to the test dataset directory')
+parser.add_argument('-i', '--image', type=str, default='000394.png', help='Path to the input image')
 
 
 args = parser.parse_args()
 model_version = 'format_3.3'
 coords_version = 'format_3'
 
-image_filename = '000394.png'
-test_dataset_dir = f'local/test_dataset/version3'
+image_filename = args.image
+test_dataset_dir = args.testdir
 img_path = os.path.join(test_dataset_dir, f'images/{image_filename}')
 matrix_file = os.path.join(test_dataset_dir, f'transformation_matrices/{os.path.splitext(image_filename)[0]}.txt')
 
@@ -115,116 +32,43 @@ matrix_file = os.path.join(test_dataset_dir, f'transformation_matrices/{os.path.
 coords_file = f"./estimator/model/coords/{coords_version}/coords.json"
 model_path = f"./estimator/weights/{model_version}/best.pt"
 mesh_file = "./estimator/model/test.obj"
-obj_points = []
-img_points = []
-keypointsArr = None
-
-fx = 915.5166015625
-fy = 915.607421875
-cx = 629.287109375
-cy = 356.802307128906
-
-cam_mat = np.array([[fx, 0, cx],
-                    [0, fy, cy],
-                    [0, 0, 1]], dtype=np.float32)
-
-dist_coeffs = np.zeros((5, 1), dtype=np.float32)
 
 
+frame = cv2.imread(img_path)
+yoloinstance = yolo.YOLODetect(model_path)
+pnpinstance = pnp.PoseSolver()
+pnpinstance.initialize(coords_file, yoloinstance.get_class_names())
 
-
-frame = cv.imread(img_path)
-model = YOLO(model_path)
-result = model(img_path)[0]
-keypoints = result.keypoints.xy.cpu().numpy()
-bboxes = result.boxes.xyxy.cpu().numpy()
-class_names = result.names
-classes_predicted = result.boxes.cls.cpu().numpy().astype(int)
-
-predicted_keypoints = {}
-
-
-
-with open (coords_file, "r") as f:
-    keypointsArr = json.load(f)
-
-#detected keypoints
-for kps, cls_id in zip(keypoints, classes_predicted):
-    p_class_name = class_names[cls_id]
-    arr = []
-    for x, y in kps:
-        #img_points.append([x,y])
-        arr.append([x,y])
-    predicted_keypoints[p_class_name] = arr
-
-#match and filter
-filtered_keypoints = {k: v for k, v in keypointsArr.items() if k in predicted_keypoints}
-for k,v in predicted_keypoints.items():
-    for t in v:
-        img_points.append(t)
-    for c in filtered_keypoints[k]:
-        obj_points.append(c['location'])
-
-
-obj_points = np.array(obj_points, dtype=np.float32)
-img_points  = np.array(img_points,  dtype=np.float32)
-
-print('obj points', obj_points)
-print('img points', img_points)
+classes, kpts, kptsconf, bboxes, bboxesconf = yoloinstance.run_inference(frame)
 
 vertices_array = load_obj_vertices(mesh_file)
 faces_array = load_obj_faces(mesh_file)
 
 
-##### DEBUG
+success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes)
+print(kpts)
 
-#transform
-# rmatrix = np.array([
-#     (-1, 0, 0),
-#     (0, -1, 0),
-#     (0,  0, -1)
-# ])
+if not success:
+    print("Pose estimation failed")
+    exit()
 
-# obj_points = np.matmul(obj_points, rmatrix)
-# rmatrix = np.array([
-#      (-1, 0, 0),
-#      (0, -1, 0),
-#      (0,  0, 1)
-#  ])
+if tvec[2][0] < 0:
+    rmatrix = np.array([
+        (-1, 0, 0),
+        (0, -1, 0),
+        (0,  0, 1)
+    ])
 
-# obj_points = np.matmul(obj_points, rmatrix)
+    rotation_matrix_1, _ = cv2.Rodrigues(rvec)
+    modified_rotation_matrix = rmatrix @ rotation_matrix_1
+    modified_rvec, _ = cv2.Rodrigues(modified_rotation_matrix)
+    modified_tvec = -tvec
 
+    success, rvec, tvec = pnpinstance.solvepose(object_points, image_points, modified_rvec, modified_tvec, use_Extrinsic_Guess=True)
 
-
-
-try:
-    success, rvec, tvec = cv.solvePnP(
-        obj_points, 
-        img_points, 
-        cam_mat, 
-        dist_coeffs
-    )
-except Exception as ex:
-    success = False
-    print("Could not solve pose")
-    print(ex)
-
-
-def getaxisangle(angle_axis):
-    angle_axis = angle_axis.reshape(3)
-
-    angle = np.linalg.norm(angle_axis)
-
-    if angle > 1e-9:
-        axis = angle_axis / angle
-    else:
-        axis = np.array([1.0, 0.0, 0.0]) 
-
-    return axis, angle
 
 
 if success:
-    # Define 3D axis points (length = 5 cm)
     axis_length = 0.05  # meters
     axis_points = np.float32([
         [0, 0, 0],                   # origin
@@ -233,132 +77,29 @@ if success:
         [0, 0, axis_length]          # Z axis (blue)
     ])
 
-
-
-
     ###Compare Matrices From Blender to OpenCV---------------------------------------
     
-    S = np.diag([1.0, -1.0, -1.0])
+    Transformation_Matrix_Blender_to_OpenCV = np.diag([1.0, -1.0, -1.0])
     matrix_from_file = np.loadtxt(matrix_file)
-    R_b = matrix_from_file[:3, :3]
-    T_b = matrix_from_file[:3, 3].reshape(3,1)
-    R_b2cv = S @ R_b
-    T_b2cv = (S @ T_b).reshape(3,1)
-    rvec_from_blender, _ = cv.Rodrigues(R_b2cv)
-    tvec_from_blender = T_b2cv
-
+    R_Matrix_Blender = matrix_from_file[:3, :3]
+    Tvec_Blender = matrix_from_file[:3, 3].reshape(3,1)
+    Rvec_Blender_to_OpenCV = Transformation_Matrix_Blender_to_OpenCV @ R_Matrix_Blender
+    Tvec_Blender_to_OpenCV = (Transformation_Matrix_Blender_to_OpenCV @ Tvec_Blender).reshape(3,1)
 
     #analysis
-    Ro, _ = cv.Rodrigues(rvec)
+    Rotation_Matrix, _ = cv2.Rodrigues(rvec)
+    analyzer = error_analyzer.Analyzer()
+    rotationalError = analyzer.getRotationError(Rotation_Matrix, Rvec_Blender_to_OpenCV)
+    translationError = analyzer.getTranslationError(tvec, Tvec_Blender_to_OpenCV)
 
-    analyzer = Analyzer()
-    rot_error = analyzer.getRotationError(Ro, R_b2cv)
-    t_error = analyzer.getTranslationError(tvec, tvec_from_blender)
-
-
-    print('tvec from blender', tvec_from_blender)
-    print('rvec from blender', rvec_from_blender)
-
-    print('rvec predicted', rvec)
-    print('tvec predicted', tvec)
-
-    print("Predicted Rotation Matrix", Ro)
-    print("Blender Rotation Matrix", R_b2cv)
-
-    print("Rotational Error: ", rot_error)
-    print("Translation Error: ", t_error)
-
-    #manipulate matrix
-    rmatrix = np.array([
-        (-1, 0, 0),
-        (0, -1, 0),
-        (0,  0, 1)
-    ])
-
-    modified_Ro = rmatrix @ Ro
-    modified_rvec, _ = cv.Rodrigues(modified_Ro)
-    modified_tvec = -tvec
-    print("Calculating Again")
-    try:
-        success, re_rvec, re_tvec = cv.solvePnP(
-            obj_points, 
-            img_points, 
-            cam_mat, 
-            dist_coeffs,
-            rvec = modified_rvec,
-            tvec = modified_tvec,
-            useExtrinsicGuess=True
-
-        )
-    except Exception as ex:
-        success = False
-        exit()
-        print("Could not solve pose")
-        print(ex)
-
-    
-
-    Re_Ro, _ = cv.Rodrigues(re_rvec)
-    rot_error = analyzer.getRotationError(Re_Ro, R_b2cv)
-    t_error = analyzer.getTranslationError(re_tvec, tvec_from_blender)
-
-    print('Re rvec', re_rvec)
-    print('Re tvec', re_tvec)
-
-    print("Re Rotational Error: ", rot_error)
-    print("Re Translation Error: ", t_error)
-
-    paxis, pangle = getaxisangle(rvec)
-    aaxis, aangle = getaxisangle(rvec_from_blender)
-    maxis, mangle = getaxisangle(modified_rvec)
-    raxis, rangle = getaxisangle(re_rvec)
+    print("Rotational Error: ", rotationalError)
+    print("Translation Error: ", translationError)
 
 
-    ###DEBUG-------------
-    SAVE_TO_JSON = True
-    if SAVE_TO_JSON:
-        save_results = {}
-        save_results['predicted'] = {
-            'rvec' : list(paxis),
-            'angle' : np.degrees(pangle),
-            'tvec' : list(tvec.flatten())
-        }
-        save_results['truth'] = {
-            'rvec' : list(aaxis),
-            'angle' : np.degrees(aangle),
-            'tvec' : list(tvec_from_blender.flatten())
-        }
-        save_results['modified'] = {
-            'rvec' : list(maxis),
-            'angle' : np.degrees(mangle),
-            'tvec' : list(modified_tvec.flatten())
-        }
-        save_results['recalculated'] = {
-            'rvec' : list(raxis),
-            'angle' : np.degrees(rangle),
-            'tvec' : list(re_tvec.flatten())
-        }
-
-        with open('local/debug rvecs using blender/pnp_data_file.json', 'w') as f:
-            json.dump(save_results, f, indent=4)
-
-
-
-    draw_truth = False
-
-    draw_rvec = re_rvec
-    draw_tvec = re_tvec
-
-    if draw_truth:
-        draw_rvec = rvec_from_blender
-        draw_tvec = tvec_from_blender
-
-
-    
 
 
     # Project to image
-    imgpts, _ = cv.projectPoints(axis_points, draw_rvec, draw_tvec, cam_mat, dist_coeffs)
+    imgpts, _ = cv2.projectPoints(axis_points, rvec, tvec, constants.Constants.cam_mat, constants.Constants.dist_coeffs)
     imgpts = imgpts.reshape(-1, 2).astype(int)
 
     # Project 3D points to image plane
@@ -367,7 +108,7 @@ if success:
     vertices_cv[:,1] *= -1  # invert y
 
     ##original----------------------------
-    objtoimg, _ = cv.projectPoints(vertices_array, draw_rvec, draw_tvec, cam_mat, dist_coeffs)
+    objtoimg, _ = cv2.projectPoints(vertices_array, rvec, tvec, constants.Constants.cam_mat, constants.Constants.dist_coeffs)
     objtoimg = np.int32(objtoimg).reshape(-1, 2)
 
     ###keep this block commented
@@ -378,16 +119,16 @@ if success:
     #Draw faces
     for face in faces_array:
         pts = objtoimg[face]
-        cv.polylines(frame, [pts], True, (0,255,255), 2)
+        cv2.polylines(frame, [pts], True, (0,255,255), 2)
 
     # Draw axes on frame
-    cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[1]), (0, 0, 255), 3) # X - red
-    cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[2]), (0, 255, 0), 3) # Y - green
-    cv.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[3]), (255, 0, 0), 3) # Z - blue
-    cv.imshow('img', frame)
+    cv2.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[1]), (0, 0, 255), 3) # X - red
+    cv2.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[2]), (0, 255, 0), 3) # Y - green
+    cv2.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[3]), (255, 0, 0), 3) # Z - blue
+    cv2.imshow('img', frame)
 
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 else:
     print("failed")

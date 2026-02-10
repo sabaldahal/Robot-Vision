@@ -20,25 +20,31 @@ class PoseSolver:
     @classmethod
     def solvepose(cls, object_points, image_points, rvec=None, tvec=None, use_Extrinsic_Guess=False):
         try:
-            success, result_rvec, result_tvec = cv2.solvePnP(
-                object_points,
-                image_points,
-                Constants.cam_mat,
-                Constants.dist_coeffs,
-                rvec,
-                tvec,
-                useExtrinsicGuess=use_Extrinsic_Guess
-            )
+            if use_Extrinsic_Guess:
+                success, result_rvec, result_tvec = cv2.solvePnP(
+                    object_points,
+                    image_points,
+                    Constants.cam_mat,
+                    Constants.dist_coeffs,
+                    rvec,
+                    tvec,
+                    useExtrinsicGuess=use_Extrinsic_Guess
+                )
+            else:
+                success, result_rvec, result_tvec = cv2.solvePnP(
+                    object_points,
+                    image_points,
+                    Constants.cam_mat,
+                    Constants.dist_coeffs
+                )
         except Exception as ex:
             success = False
             print("pnp::solvepose:", ex)
-            return (success, result_rvec, result_tvec)
+            return (success, None, None)
 
         else:
             return (success, result_rvec, result_tvec)
         
-
-
     @classmethod
     def format_multi_class_keypoints(cls, keypoints_predicted, classes_predicted):
         img_points = []
@@ -64,15 +70,12 @@ class PoseSolver:
 
         return (obj_points, img_points)
 
-
     @classmethod
     def format_multi_class_keypoints_and_solve_pose(cls, keypoints_predicted, classes_predicted, rvec=None, tvec=None, use_Extrinsic_Guess=False):
         obj_points, img_points = cls.format_multi_class_keypoints(keypoints_predicted, classes_predicted)
         s,r,t =  cls.solvepose(obj_points, img_points, rvec, tvec, use_Extrinsic_Guess)
         return (s,r,t, obj_points, img_points)
         
-    
-
     @classmethod
     def format_single_class_keypoints(cls, keypoints_predicted):
         img_points = []
