@@ -25,20 +25,22 @@ def draw_bbox_keypoints(image, bboxes, kpts, classes, classes_name, show_image =
     return image
 
 def draw_confidence_scores(image, bboxes_conf, kpts_conf, classes, classes_name, show_image=True, wait=True):
+    line_height = 15
     x = 10
     y = 0
-    for b_conf, k_conf, cls_id in zip(bboxes_conf, kpts_conf):
+    for b_conf, k_conf, cls_id in zip(bboxes_conf, kpts_conf, classes):
         color = list(np.random.random(size=3) * 256)
         class_name = classes_name[cls_id]
-        cv2.putText(image, class_name, (x-5, y+5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-        cv2.putText(image, f'bbox : {b_conf}', (x, y+10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-
-
-        y += 15
+        cv2.putText(image, class_name, (x-5, y+line_height), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+        cv2.putText(image, f'bbox : {b_conf:.3f}', (x, y+(line_height * 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+        
+        cv2.putText(image, f'Keypoints:', (x, y+(line_height * 3)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+        y += (line_height * 3)
         for idx, kc in enumerate(k_conf):
-            cv2.putText(image, f'{idx+1} : {kc}', (x+5, y+5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-            y += 5
+            cv2.putText(image, f'{idx+1} : {kc:.3f}', (x+5, y+line_height), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+            y += line_height
 
+        y += line_height
     if show_image:
         cv2.imshow('Confidence Scores', image)
         
