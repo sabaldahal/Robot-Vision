@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 from modules.utils import constants
 
-def draw_pose(frame, rvec, tvec, vertices_array, faces_array, wait=True):
+def draw_pose(frame, rvec, tvec, vertices_array, faces_array, wait=True, window = "Pose Visualization"):
+    
     axis_length = 0.05  # meters
     axis_points = np.float32([
         [0, 0, 0],                   # origin
@@ -28,7 +29,7 @@ def draw_pose(frame, rvec, tvec, vertices_array, faces_array, wait=True):
     cv2.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[1]), (0, 0, 255), 3) # X - red
     cv2.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[2]), (0, 255, 0), 3) # Y - green
     cv2.arrowedLine(frame, tuple(imgpts[0]), tuple(imgpts[3]), (255, 0, 0), 3) # Z - blue
-    cv2.imshow('Pose Visualization', frame)
+    cv2.imshow(window, frame)
 
     if wait:            
         cv2.waitKey(0)

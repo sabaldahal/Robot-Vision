@@ -4,11 +4,11 @@ from ultralytics import YOLO
 import os
 import json
 import numpy as np
-import pyrealsense2 as rs
+# import pyrealsense2 as rs
+import sys
 from modules.utils import *
 from modules.utils.threeD_mesh import *
 from modules.visualize import pose_viz
-
 
 
 
@@ -20,7 +20,6 @@ model_path = f"./estimator/weights/{model_version}/best.pt"
 mesh_file = "./estimator/model/test.obj"
 
 
-
 yoloinstance = yolo.YOLODetect(model_path)
 pnpinstance = pnp.PoseSolver()
 pnpinstance.initialize(coords_file, yoloinstance.get_class_names())
@@ -28,28 +27,40 @@ pnpinstance.initialize(coords_file, yoloinstance.get_class_names())
 vertices_array = load_obj_vertices(mesh_file)
 faces_array = load_obj_faces(mesh_file)
 
-# Configure streams
-pipeline = rs.pipeline()
-config = rs.config()
-config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
-
-# Start streaming
-profile = pipeline.start(config)
-depth_sensor, color_sensor, *_ = profile.get_device().query_sensors()
-color_sensor.set_option(rs.option.enable_auto_exposure, 1)
-color_sensor.set_option(rs.option.backlight_compensation, 0)
-color_sensor.set_option(rs.option.enable_auto_white_balance, 1)
-color_sensor.set_option(rs.option.auto_exposure_priority, 1)
 
 
+video_path = "/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/animated video/spacecraft_animation0001-1800.mp4"
+cap = cv2.VideoCapture(video_path)
 
-while True:
-    frames = pipeline.wait_for_frames()
-    color_frame = frames.get_color_frame()
-    if not color_frame:
+# Check if the video was opened successfully
+if not cap.isOpened():
+    print(f"Error: Could not open video file at {video_path}")
+    exit()
+
+import datetime
+
+paused = False
+while cap.isOpened():
+    key = cv2.waitKey(25) & 0xFF
+    if key == ord('q'): # Press 'q' to exit
+        break
+    elif key == ord('p'): # Press 'p' to pause/resume
+        paused = not paused
+
+    if paused:
         continue
-    color_image = np.asanyarray(color_frame.get_data())
-    cache_color_image = color_image.copy()
+
+    ret, color_image = cap.read()
+    if not ret:
+        print("failed to grab frame")
+        break 
+    current_frame_number = cap.get(cv2.CAP_PROP_POS_FRAMES)
+    time_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
+    seconds = int(time_ms / 1000)
+    # timestamp = time_ms
+    timestamp = str(datetime.timedelta(seconds=seconds))
+    cv2.putText(color_image, f"Time: {timestamp}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    cv2.putText(color_image, f"Frame: {current_frame_number}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     classes, kpts, kptsconf, bboxes, bboxesconf = yoloinstance.run_inference(color_image)
 
     if model_version.startswith('format_2'):
@@ -64,6 +75,5 @@ while True:
         cv2.imshow(window_name, color_image) 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
-# cv.waitKey(0)
+    
 cv2.destroyAllWindows()

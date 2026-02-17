@@ -20,6 +20,9 @@ class PoseSolver:
 
     @classmethod
     def solvepose(cls, object_points, image_points, rvec=None, tvec=None, use_Extrinsic_Guess=False, bring_object_to_front = True):
+        if image_points is None or image_points.size == 0:
+            print("pnp::solvepose: No image points provided, cannot solve pose.")
+            return (False, None, None)
         start_time_all = time.perf_counter()
         start_time_cpu = time.process_time()
         try:
