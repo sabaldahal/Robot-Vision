@@ -10,14 +10,5 @@ venv/
 runs/
 **/*.zip
 
-/Modified YOLO/ultralytics/*
-/Modified YOLO/ultralytics/ultralytics/*
-/Modified YOLO/ultralytics/ultralytics/utils/*
-/Modified YOLO/ultralytics/ultralytics/cfg/*
-
-
-!/Modified YOLO/ultralytics/ultralytics/
-!/Modified YOLO/ultralytics/ultralytics/utils/
-!/Modified YOLO/ultralytics/ultralytics/utils/loss.py
-!/Modified YOLO/ultralytics/ultralytics/cfg/
-!/Modified YOLO/ultralytics/ultralytics/cfg/default.yaml
+/Modified YOLO/*
+!/Modified YOLO/modified files/
