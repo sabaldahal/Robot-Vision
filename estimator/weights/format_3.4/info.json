@@ -1,0 +1,9 @@
+{
+    "format": 3.4,
+    "description": "New Loss Function Used",
+    "details": "L1 Loss + OKS",
+    "note": "Modified YOLO architecture and various other parameters",
+    "params":{
+        
+    }
+}

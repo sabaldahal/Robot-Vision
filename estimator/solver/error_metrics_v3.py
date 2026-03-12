@@ -9,12 +9,12 @@ import cv2
 
 
 
-ALL_MODELS_VERSION = ['format_3.1', 'format_3.2', 'format_3.3', 'format_2.1', 'format_2.2']
+ALL_MODELS_VERSION = ['format_3.2', 'format_3.3', 'format_3.4']
 TEST_DATASET_VERSION = 'version3'
 TEST_OUTPUT_VERSION = 3
-DEFAULT_OUTPUT_FOLDER = 'version_2'
+DEFAULT_OUTPUT_FOLDER = 'March12'
 OUTPUT_FOLDER = 'debug_confidence_1'
-USE_DEFAULT = False
+USE_DEFAULT = True
 DEBUG = True
 
 if USE_DEFAULT:
@@ -69,9 +69,9 @@ def get_inference_results(modelversion):
         seed_tvec[2][0] = 2
 
         if IS_MULTICLASS:
-            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes, seed_rvec, seed_tvec, True, True)
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes)
         else:
-            success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts, seed_rvec, seed_tvec, True, True)
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts)
 
         if success:
             ###Compare Matrices From Blender to OpenCV---------------------------------------       

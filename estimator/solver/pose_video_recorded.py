@@ -12,7 +12,7 @@ from modules.visualize import pose_viz
 
 
 
-model_version = 'format_3.3'
+model_version = 'format_3.4'
 coords_version = 'format_3'
 
 coords_file = f"./estimator/model/coords/{coords_version}/coords.json"
@@ -29,7 +29,8 @@ faces_array = load_obj_faces(mesh_file)
 
 
 
-video_path = "/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/animated video/spacecraft_animation0001-1800.mp4"
+#video_path = "/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/animated video/spacecraft_animation0001-1800.mp4"
+video_path = "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/local/test_videos/realsense_color_1.avi"
 cap = cv2.VideoCapture(video_path)
 
 # Check if the video was opened successfully
