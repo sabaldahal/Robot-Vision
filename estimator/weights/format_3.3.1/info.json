@@ -1,0 +1,10 @@
+{
+    "format": "3.3.1",
+    "description": "Old Loss Function Used",
+    "dataset_description": "Increased dataset size + real images + null images",
+    "details": "OKS Loss Function",
+    "note": "",
+    "params":{
+        
+    }
+}

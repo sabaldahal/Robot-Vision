@@ -24,6 +24,7 @@ def load_obj_faces(filepath):
                 faces.append(face_indices)
     return np.array(faces, dtype=int)
 
+#not needed
 def project_points_numpy(objectPoints, rvec, tvec, cam_mat):
     """
     Project 3D points to 2D using OpenCV-style pinhole camera model.

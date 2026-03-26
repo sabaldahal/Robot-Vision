@@ -9,7 +9,7 @@ import cv2
 
 
 
-ALL_MODELS_VERSION = ['format_3.2', 'format_3.3', 'format_3.4']
+ALL_MODELS_VERSION = ['format_3.2', 'format_3.3', 'format_3.3.1', 'format_3.4']
 TEST_DATASET_VERSION = 'version3'
 TEST_OUTPUT_VERSION = 3
 DEFAULT_OUTPUT_FOLDER = 'March12'
