@@ -19,12 +19,13 @@ class PoseSolver:
         cls.class_names = class_names
 
     @classmethod
-    def solvepose(cls, object_points, image_points, rvec=None, tvec=None, use_Extrinsic_Guess=False, bring_object_to_front = True):
+    def solvepose(cls, object_points, image_points, rvec=None, tvec=None, use_Extrinsic_Guess=False, bring_object_to_front = True, isCoPlanar=False):
         if image_points is None or image_points.size == 0:
             print("pnp::solvepose: No image points provided, cannot solve pose.")
             return (False, None, None)
         start_time_all = time.perf_counter()
         start_time_cpu = time.process_time()
+        useflags = cv2.SOLVEPNP_IPPE if isCoPlanar else cv2.SOLVEPNP_ITERATIVE
         try:
             if use_Extrinsic_Guess:
                 success, result_rvec, result_tvec = cv2.solvePnP(
@@ -34,14 +35,16 @@ class PoseSolver:
                     Constants.dist_coeffs,
                     rvec,
                     tvec,
-                    useExtrinsicGuess=use_Extrinsic_Guess
+                    useExtrinsicGuess=use_Extrinsic_Guess,
+                    flags= useflags
                 )
             else:
                 success, result_rvec, result_tvec = cv2.solvePnP(
                     object_points,
                     image_points,
                     Constants.cam_mat,
-                    Constants.dist_coeffs
+                    Constants.dist_coeffs,
+                    flags=useflags
                 )
         except Exception as ex:
             success = False
@@ -73,7 +76,8 @@ class PoseSolver:
                             Constants.dist_coeffs,
                             modified_rvec,
                             modified_tvec,
-                            useExtrinsicGuess = True
+                            useExtrinsicGuess = True,
+                            flags=useflags
                         )
                     except Exception as ex1:
                         success = False
@@ -121,7 +125,8 @@ class PoseSolver:
     @classmethod
     def format_multi_class_keypoints_and_solve_pose(cls, keypoints_predicted, classes_predicted, rvec=None, tvec=None, use_Extrinsic_Guess=False, bring_object_to_front=True):
         obj_points, img_points = cls.format_multi_class_keypoints(keypoints_predicted, classes_predicted)
-        s,r,t =  cls.solvepose(obj_points, img_points, rvec, tvec, use_Extrinsic_Guess, bring_object_to_front)
+        isPointsCoPlanar = True if len(classes_predicted) == 1 else False
+        s,r,t =  cls.solvepose(obj_points, img_points, rvec, tvec, use_Extrinsic_Guess, bring_object_to_front, isCoPlanar=isPointsCoPlanar)
         return (s,r,t, obj_points, img_points)
         
     @classmethod
