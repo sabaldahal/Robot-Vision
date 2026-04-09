@@ -4,14 +4,20 @@ Computer Vision tools and pipelines for spacecraft robotics research.
 This repository contains data generation, training, and inference code used to build and evaluate 6-DoF pose estimators and related tooling for robotic perception experiments.
 
 ## Contents
-- **Overview:** high-level project goals and components.
-- **Repository structure:** short descriptions of main folders and their purpose.
-- **Quickstart:** minimal steps to run common tasks (data generation, inference, training).
+- **Overview:** 
+- **Repository structure:** 
+- **Quickstart:** 
 
-## Features
+## Overview
 - Scripts and utilities to generate synthetic datasets (Blender-based).
+	- Supports multiple objects(Might need few adjustments [FUTURE WORK]) OR multiple classes within the same object
+	- Currently fully supports multiple classes within the same object. 
+	- Object used in this case has the following classes: FaceA, FaceB, FaceC, FaceD
+	- Outputs data in COCO format along with the rendered images
+	- Supports YOLO format output too (needs a little adjustment [FUTURE WORK])
 - Training and evaluation pipelines for pose estimation (multiple formats supported).
 - Inference utilities to run models on images/videos and compute pose errors.
+- Calculates Pose using PnP (Iterative and IPPE)
 
 ## Repository structure
 - **data generator/**: Blender-based dataset generation and formatting utilities (e.g., `runinblender.py`, `sdgdata.py`, `bbox.py`). Use these to synthesize images, bounding boxes, keypoints, and transformation matrices.
@@ -32,26 +38,26 @@ Prerequisites: Python 3.8+, common packages such as `numpy`, `opencv-python`, an
 Run inference (example):
 
 ```bash
-needs update
+python3 estimator/solver/inference.py
 ```
 
-Run multiclass inference (example):
+Solve Pose and Visualize (example):
 
 ```bash
-needs update
+python3 estimator/solver/pose.py
 ```
 
 Generate synthetic data (Blender):
 
 ```bash
-needs update
+blender /path/to/blenderFile --background --python /data generator/runinblender.py
 ```
 
-Train a model (example):
+<!-- Train a model (example):
 
 ```bash
 needs update
-```
+``` -->
 
 Notes: each script contains its own CLI and usage notes. Inspect the top of the script files for specific flags and configuration options.
 
