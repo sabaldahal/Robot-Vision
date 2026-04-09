@@ -22,7 +22,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
 parser.add_argument('-t', '--testdir', type=str, default='./local/test_dataset/version3', help='Path to the test dataset directory')
-parser.add_argument('-i', '--image', type=str, default='000058.png', help='Path to the input image')
+parser.add_argument('-i', '--image', type=str, default='000147.png', help='Path to the input image')
 
 
 args = parser.parse_args()

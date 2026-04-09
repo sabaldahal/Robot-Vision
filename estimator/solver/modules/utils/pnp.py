@@ -98,7 +98,7 @@ class PoseSolver:
             return (success, result_rvec, result_tvec)
         
     @classmethod
-    def format_multi_class_keypoints(cls, keypoints_predicted, classes_predicted):
+    def format_multi_class_keypoints(cls, keypoints_predicted, classes_predicted, kpts_conf=None):
         img_points = []
         obj_points = []
         predicted_keypoints = {}
@@ -123,8 +123,8 @@ class PoseSolver:
         return (obj_points, img_points)
 
     @classmethod
-    def format_multi_class_keypoints_and_solve_pose(cls, keypoints_predicted, classes_predicted, rvec=None, tvec=None, use_Extrinsic_Guess=False, bring_object_to_front=True):
-        obj_points, img_points = cls.format_multi_class_keypoints(keypoints_predicted, classes_predicted)
+    def format_multi_class_keypoints_and_solve_pose(cls, keypoints_predicted, classes_predicted, kpts_conf=None, rvec=None, tvec=None, use_Extrinsic_Guess=False, bring_object_to_front=True):
+        obj_points, img_points = cls.format_multi_class_keypoints(keypoints_predicted, classes_predicted, kpts_conf)
         isPointsCoPlanar = True if len(classes_predicted) == 1 else False
         s,r,t =  cls.solvepose(obj_points, img_points, rvec, tvec, use_Extrinsic_Guess, bring_object_to_front, isCoPlanar=isPointsCoPlanar)
         return (s,r,t, obj_points, img_points)
