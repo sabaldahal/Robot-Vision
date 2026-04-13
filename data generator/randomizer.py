@@ -9,6 +9,8 @@ import random
 import math
 from typing import Tuple
 
+from config import Config
+
 class Bounds():
     def __init__(self, x:Tuple[float, float], y:Tuple[float, float], z:Tuple[float, float]):
         self.X = x
@@ -51,12 +53,14 @@ class Randomizer():
         camera.rotation_euler[1] += random.uniform(-max_radians, max_radians)  # Y (roll)
         camera.rotation_euler[2] += random.uniform(-max_radians, max_radians) 
 
-    def set_minimum_distance(self):
+    def set_min_max_distance(self):
         distance = (self.data.camera.location - self.data.obj_controller.location).length
         if self.settings.cameraDistance is not None:
-            minDistance = random.uniform(*self.settings.cameraDistance)        
+            setDistance = random.uniform(*self.settings.cameraDistance)     
+            if Config.Verbose:
+                print(f"Setting the distance between camera and object: {setDistance} metres")   
             d = (self.data.camera.location - self.data.obj_controller.location).normalized()
-            self.data.camera.location = self.data.obj_controller.location + d * minDistance
+            self.data.camera.location = self.data.obj_controller.location + (d * setDistance)
         return distance
     
     def offset_camera_position(self, offsetVal=0.2):
@@ -73,10 +77,23 @@ class Randomizer():
         width = 2 * distance * math.tan(fov_x / 2)
         return width
     
+    def lookAtObject_withoutOffset(self):
+        direction = self.data.obj_controller.location - self.data.camera.location
+        rot_quat = direction.to_track_quat('-Z', 'Y')
+        self.data.camera.rotation_euler = rot_quat.to_euler()
+    
     def lookAtObject(self):
         distance = (self.data.obj_controller.location - self.data.camera.location).length
+
         width = self.camera_x_coverage(self.data.camera, distance)
-        camera_angle_offset = (-width // 3, width // 3)
+        if Config.Verbose:
+            print(f"Actual Distance between camera and object: {distance} metres")  
+            print(f"Width of the camera coverage at distance {distance} metres is {width} metres")
+        dividing_factor = 2
+        if distance < 1: dividing_factor = 0.8
+        elif distance > 5: dividing_factor = 4
+        offset_limit = width // (dividing_factor)
+        camera_angle_offset = (-offset_limit, offset_limit)
         offset = random.uniform(*camera_angle_offset)    
         direction = self.data.obj_controller.location - self.data.camera.location
         rot_quat = direction.to_track_quat('-Z', 'Y')
@@ -138,21 +155,22 @@ class Randomizer():
         if self.settings.changeCameraPositionZ: camz = random.uniform(*camBoundsZ)
         if random.random() > 0.05:
             self.data.camera.location = Vector((camx, camy, camz))
-        distance = self.set_minimum_distance()
+        distance = self.set_min_max_distance()
         self.lookAtObject()
+        # self.lookAtObject_withoutOffset()
         
 
-        old = False
-        if old:    
-            offsetVal = 0.05
-            if distance < 0.4:
-                offsetVal = 0.015
-            self.offset_camera_position(offsetVal)
-            #random camera rotation
-            self.randomize_camera_rotation()
-            #restore actual random z position
-            camera.location = Vector((camera.location.x, camera.location.y, camz))
-            self.lookAtObject()
+        # use_old = False
+        # if use_old:    
+        #     offsetVal = 0.05
+        #     if distance < 0.4:
+        #         offsetVal = 0.015
+        #     self.offset_camera_position(offsetVal)
+        #     #random camera rotation
+        #     self.randomize_camera_rotation()
+        #     #restore actual random z position
+        #     camera.location = Vector((camera.location.x, camera.location.y, camz))
+        #     self.lookAtObject_withoutOffset()
 
     def randomize_lights(self):
         energyR = (1, 8)

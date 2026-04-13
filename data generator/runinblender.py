@@ -8,7 +8,7 @@ sys.path.append("/home/sabal/code/spacecraft blender/latest/python/blender_packa
 sys.path.append("/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/data generator")
 
 #ubuntu
-dir = "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/local/test dataset"
+dir = "/home/sabal/code/spacecraft blender/latest/robot vision/Robot-Vision/local/close up dataset/version1"
 #mac
 # dir = '/Users/sabaldahal/Desktop/College/WORK-RESEARCH LAB/spacecraft blender/src/v2/Robot-Vision/local/working model/update_dec_4_2025/renders_1_3_2026'
 
@@ -80,7 +80,7 @@ data = SDGData(scene, camera, resx, resy, bottom_collection, top_collection, all
 keypoint_handler = KeyPoints(data)
 bbox_handler = BoundingBox(data)
 scene_randomizer = Randomizer(data)
-#scene_randomizer.settings.cameraDistance = (0.3, 0.8)
+scene_randomizer.settings.cameraDistance = (0.1, 0.5)
 #scene_randomizer.settings.cameraBounds.Z = (0.93, 2)
 data_formatter = DataFormatter(data)
 transformation_matrix_calculator = TransformationMatrix(data)
@@ -121,9 +121,9 @@ def stdout_redirected(to=os.devnull):
         finally:
             _redirect_stdout(to=old_stdout)
 
-TOTAL_IMAGES_TO_GENERATE = 420
+TOTAL_IMAGES_TO_GENERATE = 3000
 totalimages = TOTAL_IMAGES_TO_GENERATE
-image_index = 100
+image_index = 0
 generated_images = 0
 coco_annotation_file = os.path.join(image_dir, "_annotations.coco.json")
 coco_data_writer = data_formatter.export_data_COCO(coco_annotation_file, 25)
