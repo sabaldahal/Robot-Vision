@@ -102,20 +102,47 @@ class PoseSolver:
         img_points = []
         obj_points = []
         predicted_keypoints = {}
+        index = 0
+        shouldInclude = True
+        upperIndex = 0
+
+        kpts_conf = np.array(kpts_conf) if kpts_conf is not None else None
+        print("kpts_conf: ", kpts_conf)
+
         for kps, cls_id in zip(keypoints_predicted, classes_predicted):
+            
+            index = 0
             p_class_name = cls.class_names[cls_id]
             arr = []
             for x, y in kps:
-                arr.append([x,y])
+                shouldInclude = True
+                if(kpts_conf is not None):
+                    conf = kpts_conf[upperIndex][index]
+                    if conf < 0.5:
+                        shouldInclude = False
+                if shouldInclude:
+                    arr.append([x,y])
+                else:
+                    arr.append([None, None])
+                index += 1
             predicted_keypoints[p_class_name] = arr
+            upperIndex += 1
+
+            
 
         #match and filter
         filtered_keypoints = {k: v for k, v in cls.keypoints_3d.items() if k in predicted_keypoints}
         for k,v in predicted_keypoints.items():
-            for t in v:
-                img_points.append(t)
-            for c in filtered_keypoints[k]:
-                obj_points.append(c['location'])
+            indicesToExclude = []
+            for idx, t in enumerate(v):
+                if t[0] is None or t[1] is None:
+                    indicesToExclude.append(idx)
+                else:
+                    img_points.append(t)
+            for idx, c in enumerate(filtered_keypoints[k]):
+                if idx not in indicesToExclude:
+                    obj_points.append(c['location'])
+
 
         obj_points = np.array(obj_points, dtype=np.float32)
         img_points  = np.array(img_points,  dtype=np.float32)

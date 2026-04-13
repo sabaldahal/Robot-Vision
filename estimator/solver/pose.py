@@ -21,12 +21,12 @@ from modules.visualize import pose_viz
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
-parser.add_argument('-t', '--testdir', type=str, default='./local/test_dataset/version3', help='Path to the test dataset directory')
-parser.add_argument('-i', '--image', type=str, default='000147.png', help='Path to the input image')
+parser.add_argument('-t', '--testdir', type=str, default='./local/from ubuntu/test_dataset/version3', help='Path to the test dataset directory')
+parser.add_argument('-i', '--image', type=str, default='000498.png', help='Path to the input image')
 
 
 args = parser.parse_args()
-model_version = 'format_3.3'
+model_version = 'format_3.4'
 coords_version = 'format_3'
 
 image_filename = args.image
@@ -53,7 +53,7 @@ faces_array = load_obj_faces(mesh_file)
 if model_version.startswith('format_2'):
     success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts)
 else:
-    success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes)
+    success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes, kpts_conf=kptsconf)
 
 if success:
 

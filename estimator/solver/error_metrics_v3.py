@@ -9,7 +9,7 @@ import cv2
 
 
 
-ALL_MODELS_VERSION = ['format_3.2', 'format_3.3', 'format_3.3.1', 'format_3.4']
+ALL_MODELS_VERSION = ['format_3.3.1', 'format_3.4']
 TEST_DATASET_VERSION = 'version3'
 TEST_OUTPUT_VERSION = 3
 DEFAULT_OUTPUT_FOLDER = 'March12'
@@ -21,7 +21,7 @@ if USE_DEFAULT:
     OUTPUT_FOLDER = DEFAULT_OUTPUT_FOLDER
 
 
-test_dataset_dir = f'./local/test_dataset/{TEST_DATASET_VERSION}'
+test_dataset_dir = f'./local/from ubuntu/test_dataset/{TEST_DATASET_VERSION}'
 images_dir = os.path.join(test_dataset_dir, 'images')
 trans_mat_dir = os.path.join(test_dataset_dir, 'transformation_matrices')
 mesh_file = "./estimator/model/test.obj"
@@ -69,7 +69,7 @@ def get_inference_results(modelversion):
         seed_tvec[2][0] = 2
 
         if IS_MULTICLASS:
-            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes)
+            success, rvec, tvec, object_points, image_points = pnpinstance.format_multi_class_keypoints_and_solve_pose(kpts, classes, kpts_conf=kptsconf)
         else:
             success, rvec, tvec, object_points, image_points = pnpinstance.format_single_class_keypoints_and_solve_pose(kpts)
 
