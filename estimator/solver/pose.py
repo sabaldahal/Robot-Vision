@@ -21,12 +21,13 @@ from modules.visualize import pose_viz
 import argparse
 
 parser = argparse.ArgumentParser(description="Run Pose Estimation")
+parser.add_argument('-m', '--modelformat', type=str, default='format_3.4', help='Path to the folder containing model weights')
 parser.add_argument('-t', '--testdir', type=str, default='./local/from ubuntu/test_dataset/version3', help='Path to the test dataset directory')
 parser.add_argument('-i', '--image', type=str, default='000498.png', help='Path to the input image')
 
 
 args = parser.parse_args()
-model_version = 'format_3.4'
+model_version = args.modelformat
 coords_version = 'format_3'
 
 image_filename = args.image

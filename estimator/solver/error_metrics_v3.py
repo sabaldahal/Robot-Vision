@@ -9,10 +9,10 @@ import cv2
 
 
 
-ALL_MODELS_VERSION = ['format_3.3.1', 'format_3.4']
+ALL_MODELS_VERSION = ['format_3.4', 'format_3.test_closeup']
 TEST_DATASET_VERSION = 'version3'
 TEST_OUTPUT_VERSION = 3
-DEFAULT_OUTPUT_FOLDER = 'March12'
+DEFAULT_OUTPUT_FOLDER = 'April16'
 OUTPUT_FOLDER = 'debug_confidence_1'
 USE_DEFAULT = True
 DEBUG = True
@@ -21,7 +21,8 @@ if USE_DEFAULT:
     OUTPUT_FOLDER = DEFAULT_OUTPUT_FOLDER
 
 
-test_dataset_dir = f'./local/from ubuntu/test_dataset/{TEST_DATASET_VERSION}'
+# test_dataset_dir = f'./local/test_dataset/{TEST_DATASET_VERSION}'
+test_dataset_dir = f'./local/close up dataset/test'
 images_dir = os.path.join(test_dataset_dir, 'images')
 trans_mat_dir = os.path.join(test_dataset_dir, 'transformation_matrices')
 mesh_file = "./estimator/model/test.obj"
@@ -40,7 +41,8 @@ def main():
 def get_inference_results(modelversion):
     results = []
     model_path = f"./estimator/weights/{modelversion}/best.pt"
-    coordsversion = modelversion.split('.', 1)[0]
+    # coordsversion = modelversion.split('.', 1)[0]
+    coordsversion = 'format_3'
     coords_file = f"./estimator/model/coords/{coordsversion}/coords.json"  
 
     yoloinstance = yolo.YOLODetect(model_path)
