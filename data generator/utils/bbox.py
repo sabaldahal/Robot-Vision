@@ -37,9 +37,8 @@ class BoundingBox():
         print(f"Saved with bounding box: {out_path}")
 
 
-    def raycast_detect_corners_obj(self, obj):
+    def _project_vertices_to2D_obj(self, obj):
         """
-        Docstring for raycast_detect_corners_obj
         
         :param self: self instance of the BoundingBox class
         :param obj: a single mesh object in a collection
@@ -68,12 +67,12 @@ class BoundingBox():
 
     #deprecate this function in the future
     #this function works only for a specific spacecraft model: a single body divided into two collections
-    def raycast_detect_corners_collection(self):
+    def _project_corners_to2D_from_collection(self):
         screen_coords = []
         for a in self.data.bottom_collection.all_objects:
-            screen_coords.extend(self.raycast_detect_corners_obj(a))
+            screen_coords.extend(self._project_vertices_to2D_obj(a))
         for b in self.data.top_collection.all_objects:
-            screen_coords.extend(self.raycast_detect_corners_obj(b))
+            screen_coords.extend(self._project_vertices_to2D_obj(b))
 
         if screen_coords:
             xs, ys = zip(*screen_coords)
@@ -84,9 +83,8 @@ class BoundingBox():
     
     #function to calculate bounding boxes for multi class objects
     #this function works for any number of objects divided into different collections
-    def raycast_detect_corners_collection_multiclass(self):
+    def _project_corners_to2D_from_collection_multiclass(self):
         """
-        Docstring for raycast_detect_corners_collection_multiclass
         
         :param self: self instance of the BoundingBox class
         :return: dictionary of bounding boxes for each collection
@@ -100,7 +98,7 @@ class BoundingBox():
         for c in self.data.all_classes_collection:
             screen_coords = []
             for a in c.all_objects:
-                screen_coords.extend(self.raycast_detect_corners_obj(a))
+                screen_coords.extend(self._project_vertices_to2D_obj(a))
             
             if screen_coords:
                 xs, ys = zip(*screen_coords)
@@ -112,4 +110,4 @@ class BoundingBox():
             
 
     def project_bbox_to_2D_from_collection(self):
-        return self.raycast_detect_corners_collection_multiclass()
+        return self._project_corners_to2D_from_collection_multiclass()

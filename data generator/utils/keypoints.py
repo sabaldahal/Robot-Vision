@@ -24,11 +24,11 @@ class KeyPoints():
         """
         all_keypoints = {}
         for c in self.data.all_keypoints_collection:
-            keypoints_2d = self.project_keypoints_to_2D(c)
+            keypoints_2d = self._project_keypoints_to_2D(c)
             all_keypoints[c.name] = keypoints_2d
         return all_keypoints
 
-    def project_keypoints_to_2D(self, collection):
+    def _project_keypoints_to_2D(self, collection):
         keypoints_2d = []
         for keypoint in collection.objects:
             world_coord = keypoint.matrix_world.translation

@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap');
+
+:root {
+  --bg: #eef3f9;
+  --panel: #ffffff;
+  --card: #fbfcfe;
+  --card-2: #f5f8fc;
+  --border: #dbe4ef;
+  --border-strong: #5d7090;
+  --text: #0f2038;
+  --text-soft: #334b69;
+  --muted: #5f7591;
+  --hover: #eef4fb;
+  --accent: #0b6bd7;
+  --accent-ink: #0b5fbd;
+  --accent-soft: rgba(11, 107, 215, 0.1);
+  --accent-border: rgba(11, 107, 215, 0.24);
+  --chip-bg: #edf4ff;
+  --chip-text: #214f85;
+  --table-head: #f2f7fd;
+  --shadow-sm: rgba(32, 68, 112, 0.08) 0 10px 24px -14px;
+  --font-ui: 'Manrope', 'Segoe UI', sans-serif;
+  --font-heading: 'Sora', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  background: var(--bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--text);
+  line-height: 1.55;
+  background: linear-gradient(180deg, #eef3f9 0%, #e8eff8 100%);
+}
+
+h1,
+h2,
+h3 {
+  margin-top: 0;
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  color: var(--text);
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+h2 {
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+}
+
+h3 {
+  font-size: 1.08rem;
+}
+
+p {
+  margin: 0 0 0.75rem;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+a {
+  color: inherit;
+}

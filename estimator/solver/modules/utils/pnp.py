@@ -92,8 +92,8 @@ class PoseSolver:
             all_cpu = (end_time_cpu - start_time_cpu)* 1000
             first_cpu = (mid_time_cpu - start_time_cpu)* 1000
             second_cpu = (end_time_cpu - mid_time_cpu)* 1000
-            print(f'pnp:solvepose Speed Actual: {all_actual}, First: {first_actual}, Second: {second_actual}')
-            print(f'pnp:solvepose Speed CPU: {all_cpu}, First: {first_cpu}, Second: {second_cpu}')
+            print(f'pnp:solvepose Speed Actual: {all_actual} ms, First: {first_actual}, Second: {second_actual}')
+            print(f'pnp:solvepose Speed CPU: {all_cpu} ms, First: {first_cpu}, Second: {second_cpu}')
                         
             return (success, result_rvec, result_tvec)
         

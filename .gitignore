@@ -12,3 +12,5 @@ runs/
 
 /Modified YOLO/*
 !/Modified YOLO/modified files/
+
+**/node_modules/
