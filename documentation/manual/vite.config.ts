@@ -4,7 +4,7 @@ import babel from '@rolldown/plugin-babel'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/documentation/manual/build/',
+  base: '/Robot-Vision/documentation/manual/build/',
   build: {
     outDir: 'build',
   },
