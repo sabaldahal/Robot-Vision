@@ -856,7 +856,7 @@
   }
 
   .api-right-nav {
-    display: none;
+    display: block;
   }
 
   .api-main-content {
@@ -873,12 +873,269 @@
 }
 
 @media (max-width: 768px) {
+  .page-wrap {
+    height: auto;
+    min-height: 100dvh;
+    padding: 0.35rem;
+    overflow: auto;
+  }
+
+  .mobile-nav-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5rem;
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 0.35rem);
+    z-index: 1260;
+    margin-bottom: 0.5rem;
+    padding: 0.15rem 0;
+  }
+
+  .layout-grid,
+  .api-documentation-layout {
+    display: block;
+  }
+
+  .content,
+  .sidebar,
+  .api-main-content,
+  .api-right-nav {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .content,
+  .sidebar,
+  .api-main-content {
+    overflow: visible;
+  }
+
+  .mobile-nav-toggle {
+    display: inline-flex;
+    position: relative;
+    top: auto;
+    z-index: 1;
+    min-width: 72px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0 0.75rem;
+    cursor: pointer;
+  }
+
+  .mobile-left-nav-toggle {
+    left: auto;
+  }
+
+  .api-right-nav-mobile-toggle {
+    display: inline-flex;
+    right: calc(env(safe-area-inset-right, 0px) + 0.55rem);
+  }
+
+  .mobile-nav-icon {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .mobile-nav-icon span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--text);
+  }
+
+  .mobile-nav-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .mobile-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: rgba(8, 14, 24, 0.45);
+    z-index: 1250;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(86vw, 340px);
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0 18px 18px 0;
+    transform: translateX(-102%);
+    transition: transform 0.2s ease;
+    z-index: 1320;
+    padding: 1rem;
+    background: var(--panel);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: min(86vw, 340px);
+    padding: 1rem;
+    align-items: stretch;
+  }
+
+  .sidebar-collapse-btn,
+  .sidebar-resizer,
+  .api-right-nav-collapse-btn,
+  .api-right-nav-resizer {
+    display: none;
+  }
+
+  .sidebar-brand,
+  .sidebar-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .sidebar-scroll {
+    padding-right: 0;
+  }
+
+  .sidebar-parent-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .api-right-nav {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(86vw, 360px);
+    height: 100dvh;
+    max-height: 100dvh;
+    transform: translateX(102%);
+    transition: transform 0.2s ease;
+    z-index: 1320;
+    border-radius: 18px 0 0 18px;
+    padding: 1rem;
+    background: var(--panel);
+  }
+
+  .api-right-nav.mobile-open {
+    transform: translateX(0);
+  }
+
+  .api-right-nav.collapsed {
+    width: min(86vw, 360px);
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .api-nav-header::after {
+    content: 'Tap the menu icon to open or close navigation';
+  }
+
+  .api-nav-header,
+  .api-nav-classes {
+    max-height: none;
+  }
+
+  .api-right-nav .api-nav-header {
+    padding-top: 2.25rem;
+  }
+
+  .api-right-nav-mobile-toggle,
+  .mobile-left-nav-toggle {
+    box-shadow: 0 10px 24px rgba(8, 14, 24, 0.18);
+  }
+
+  .sidebar,
+  .content,
+  .api-right-nav {
+    border-radius: 14px;
+  }
+
+  .layout-grid {
+    gap: 0.75rem;
+  }
+
+  .sidebar {
+    height: auto;
+  }
+
+  .sidebar-scroll {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .sidebar-parent-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .sidebar a,
+  .sidebar-toggle,
+  .api-nav-class-link,
+  .api-nav-class-toggle,
+  .api-nav-method-link,
+  .api-right-nav-collapse-btn,
+  .home-link,
+  .step-link,
+  .back-link {
+    min-height: 44px;
+  }
+
+  .sidebar-toggle,
+  .api-right-nav-collapse-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .sidebar-brand-title {
+    font-size: 1rem;
+  }
+
+  .sidebar-subnav {
+    padding-left: 0.5rem;
+  }
+
+  .api-right-nav-resizer {
+    display: none;
+  }
+
+  .api-nav-header::after {
+    content: 'Tap the header or class name to open methods';
+  }
+
   .api-page-header {
     padding: 1.25rem 1rem 1.5rem 1rem;
   }
 
   .api-page-header h1 {
     font-size: 1.7rem;
+  }
+
+  .api-page-description,
+  .doc-section > p,
+  .step-card p,
+  .api-index-copy,
+  .api-class-description,
+  .api-method-description {
+    font-size: 0.98rem;
+    line-height: 1.55;
   }
 
   .api-classes-container {
@@ -915,6 +1172,70 @@
   .api-class-page-shell {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .api-main-content,
+  .content {
+    padding-top: 0.25rem;
+  }
+
+  .api-index-card-grid,
+  .artifact-grid,
+  .architecture-strip,
+  .step-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .api-index-card,
+  .step-card,
+  .artifact-grid article,
+  details,
+  .detail-panel,
+  .api-method-detail,
+  .api-index-card,
+  .api-mobile-outline,
+  .api-mobile-class {
+    border-radius: 14px;
+  }
+
+  .api-index-card,
+  .step-card,
+  .artifact-grid article,
+  details,
+  .detail-panel,
+  .api-method-detail {
+    padding: 0.85rem;
+  }
+
+  .image-display {
+    width: 100%;
+    margin: 0 auto 0.85rem;
+  }
+
+  .copyable-code-block {
+    padding: 0.75rem 0.8rem 0.85rem;
+  }
+
+  .copyable-code-actions {
+    top: 8px;
+    right: 8px;
+  }
+
+  .copyable-code-btn {
+    font-size: 0.72rem;
+  }
+
+  .step-card code,
+  .api-signature,
+  .api-example,
+  .copyable-code-block pre,
+  .api-nav-method-link,
+  .api-nav-class-file,
+  .api-mobile-method-links a,
+  .api-class-file,
+  .api-class-context {
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .api-nav-class-row {
@@ -983,6 +1304,71 @@
 
   .param-description::before {
     content: 'Description';
+  }
+
+  .table-wrap {
+    border-radius: 12px;
+  }
+
+  table {
+    min-width: 0;
+  }
+
+  .doc-section {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-wrap {
+    padding: 3.25rem 0.25rem 0.25rem;
+  }
+
+  .sidebar,
+  .content,
+  .api-right-nav {
+    border-radius: 12px;
+  }
+
+  .mobile-nav-toggle {
+    min-width: 70px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .mobile-left-nav-toggle {
+    left: calc(env(safe-area-inset-left, 0px) + 0.45rem);
+  }
+
+  .api-right-nav-mobile-toggle {
+    right: calc(env(safe-area-inset-right, 0px) + 0.45rem);
+  }
+
+  .doc-section h2,
+  .api-page-header h1 {
+    font-size: 1.45rem;
+  }
+
+  .sidebar a,
+  .api-nav-class-link,
+  .api-nav-method-link,
+  .api-mobile-method-links a {
+    padding: 0.5rem 0.55rem;
+  }
+
+  .step-card code,
+  .api-signature,
+  .api-example,
+  .copyable-code-block pre {
+    font-size: 0.82rem;
+  }
+
+  .image-display {
+    width: 100%;
+  }
+
+  .image-display-img {
+    border-radius: 10px;
   }
 }
 
@@ -1107,6 +1493,17 @@
 .sidebar-resizer:active::after {
   background: var(--accent-ink);
   height: 78px;
+}
+
+.mobile-nav-toggle,
+.mobile-nav-backdrop,
+.api-right-nav-mobile-toggle,
+.api-right-nav-backdrop {
+  display: none;
+}
+
+.mobile-nav-bar {
+  display: none;
 }
 
 .sidebar-brand {
@@ -1301,6 +1698,12 @@
   color: var(--text-soft);
 }
 
+.doc-section > p,
+.step-card p {
+  width: 100%;
+  max-width: none;
+}
+
 .subsection-link-list {
   margin: 1rem 0 0;
   padding: 0;
@@ -1373,12 +1776,55 @@ pre {
 
 .step-card {
   border: 1px solid var(--border);
-  width: 50%;
+  width: 100%;
   border-radius: 12px;
   padding: 0.9rem;
   background: linear-gradient(180deg, var(--card), var(--card-2));
   display: flex;
   flex-direction: column;
+}
+
+.image-placeholder {
+  width: 100%;
+  min-height: 160px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(11, 107, 215, 0.08), rgba(11, 107, 215, 0.02)),
+    repeating-linear-gradient(
+      45deg,
+      rgba(93, 112, 144, 0.08),
+      rgba(93, 112, 144, 0.08) 10px,
+      rgba(93, 112, 144, 0.03) 10px,
+      rgba(93, 112, 144, 0.03) 20px
+    );
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.85rem;
+}
+
+.image-display {
+  width: 60%;
+  margin: 0 auto 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.image-display-img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: block;
+  object-fit: cover;
 }
 
 .step-card h3 {
@@ -1398,6 +1844,86 @@ pre {
   padding: 0.22rem 0.52rem;
   background: var(--chip-bg);
   color: var(--chip-text);
+}
+
+.copyable-code-block {
+  margin-top: 0.75rem;
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: #0f1928;
+  color: #d6e8ff;
+  padding: 0.85rem 0.95rem 0.95rem;
+  text-align: left;
+  display: block;
+  position: relative;
+}
+
+.copyable-code-block:hover {
+  border-color: var(--accent-border);
+}
+
+.copyable-code-block.copied {
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 1px var(--accent-border) inset;
+}
+
+.copyable-code-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.copyable-code-btn {
+  background: rgba(15, 25, 40, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #d6e8ff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.copyable-code-btn:hover {
+  background: rgba(15, 25, 40, 0.14);
+  border-color: rgba(142, 185, 255, 0.22);
+}
+
+.copyable-code-block pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0.6rem 0 0 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.copyable-code-block code {
+  white-space: pre-wrap;
+}
+
+/* Ensure inline code styles from parent cards don't add a white chip background
+   to the block code area */
+.copyable-code-block code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.copyable-code-btn {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.copyable-code-block:focus-visible {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 2px;
 }
 
 .step-card ul {

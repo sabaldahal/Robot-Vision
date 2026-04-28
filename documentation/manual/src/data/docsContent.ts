@@ -50,6 +50,7 @@ import { estimationSteps } from "./PoseEstimation"
 export const navItems: NavItem[] = [
   { to: '/overview', label: 'Overview' },
   { to: '/quick-start', label: 'Quick Start' },
+
   {
     to: '/synthetic-data',
     label: 'Synthetic Data (Blender)',
@@ -58,6 +59,8 @@ export const navItems: NavItem[] = [
       { to: '/synthetic-data/api', label: 'API Reference' },
     ],
   },
+    { to: '/roboflow-workflow', label: 'Roboflow Workflow' },
+  { to: '/training-yolo-model', label: 'Training YOLO Model' },
   {
     to: '/pose-estimation',
     label: 'Pose Estimation (YOLO + PnP)',

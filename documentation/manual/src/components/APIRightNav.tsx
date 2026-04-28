@@ -28,6 +28,7 @@ export default function APIRightNav({
     new Set(),
   )
   const [activeMethodId, setActiveMethodId] = useState<string>('')
+  const [mobileOpen, setMobileOpen] = useState(false)
   const lockedSelectionIdRef = useRef<string>('')
   const lockedSelectionUntilRef = useRef<number>(0)
 
@@ -80,6 +81,10 @@ export default function APIRightNav({
       setActiveMethodId('')
     }
   }, [activeMethodId, classByMethodId, currentClassName])
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     const scrollRoot = document.querySelector('.api-main-content') as HTMLElement | null
@@ -169,7 +174,32 @@ export default function APIRightNav({
   }
 
   return (
-    <nav className={`api-right-nav ${isCollapsed ? 'collapsed' : ''}`}>
+    <>
+      <button
+        type="button"
+        className="api-right-nav-mobile-toggle"
+        onClick={() => setMobileOpen((prev) => !prev)}
+        aria-label={mobileOpen ? 'Close API navigation' : 'Open API navigation'}
+        aria-expanded={mobileOpen}
+      >
+        <span className="mobile-nav-icon" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+        <span className="mobile-nav-label">API</span>
+      </button>
+      {mobileOpen && (
+        <button
+          type="button"
+          className="mobile-nav-backdrop api-right-nav-backdrop"
+          aria-label="Close API navigation overlay"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      <nav
+        className={`api-right-nav ${isCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}
+      >
       <button
         type="button"
         className="api-right-nav-collapse-btn"
@@ -191,6 +221,10 @@ export default function APIRightNav({
             <div className="api-nav-class-row">
               <NavLink
                 to={buildApiClassRoute(moduleBasePath, apiClass.name)}
+                onClick={() => {
+                  toggleClass(apiClass.name)
+                  setMobileOpen(false)
+                }}
                 className={({ isActive }) =>
                   isActive || currentClassName === apiClass.name ? 'api-nav-class-link active' : 'api-nav-class-link'
                 }
@@ -223,6 +257,7 @@ export default function APIRightNav({
                       <li key={member.name}>
                         <Link
                             to={buildApiMemberRoute(moduleBasePath, apiClass.name, member.name)}
+                            onClick={() => setMobileOpen(false)}
                             className={
                               activeMethodId === memberId ? 'api-nav-method-link active' : 'api-nav-method-link'
                             }
@@ -242,6 +277,7 @@ export default function APIRightNav({
                     <li key={method.name}>
                       <Link
                         to={buildApiMethodRoute(moduleBasePath, apiClass.name, method.name)}
+                        onClick={() => setMobileOpen(false)}
                         className={
                           activeMethodId === methodId ? 'api-nav-method-link active' : 'api-nav-method-link'
                         }
@@ -266,6 +302,7 @@ export default function APIRightNav({
           onMouseDown={onResizeStart}
         />
       )}
-    </nav>
+      </nav>
+    </>
   )
 }

@@ -122,7 +122,7 @@ These metrics provide objective benchmarks for assessing model performance and m
 \n
 The script first runs inference, then runs pose estimation to get the rvec and tvec for each frame.
 \n
-Ground truth data is obtained from the synthetic dataset. The folder <b>transformation_matrics</b> obtained from the synthetic dataset generation step contains
+Ground truth data is obtained from the synthetic dataset. The folder <b>transformation_matrices</b> obtained from the synthetic dataset generation step contains
 the ground truth transfomation matrices with respect to the camera frame for each image in the test dataset. Rotational matrix and translation vector are extracted
 from these matrices and used as ground truth for calculating the error metrics. rvec and tvec obtained from the pose estimation step are compared against these ground truth.
 rvec is converted to a rotation matrix before calculating the error metrics.

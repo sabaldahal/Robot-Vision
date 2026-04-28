@@ -1,6 +1,6 @@
 import './App.css'
-import { useState, type MouseEvent as ReactMouseEvent } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import LeftNav from './components/LeftNav'
 import { navItems } from './data/docsContent'
 import { sidebarContent, siteHeader } from './data/siteContent'
@@ -10,7 +10,9 @@ import OverviewPage from './pages/OverviewPage'
 import OutputsPage from './pages/OutputsPage'
 import PoseEstimationPage from './pages/PoseEstimationPage'
 import QuickStartPage from './pages/QuickStartPage'
+import RoboflowWorkflowPage from './pages/RoboflowWorkflowPage'
 import SyntheticDataPage from './pages/SyntheticDataPage'
+import TrainingYOLOModelPage from './pages/Training'
 import TroubleshootingPage from './pages/TroubleshootingPage'
 import { poseEstimationAPIClasses } from './data/PoseEstimation/api'
 import { syntheticDataAPIClasses } from './data/SyntheticDataGeneration/api'
@@ -20,8 +22,14 @@ import APIClassPage from './pages/APIClassPage'
 import APIModuleIndexPage from './pages/APIModuleIndexPage'
 
 function App() {
+  const location = useLocation()
   const [leftNavCollapsed, setLeftNavCollapsed] = useState(false)
   const [leftNavWidth, setLeftNavWidth] = useState(320)
+  const [leftNavMobileOpen, setLeftNavMobileOpen] = useState(false)
+
+  useEffect(() => {
+    setLeftNavMobileOpen(false)
+  }, [location.pathname])
 
   const startLeftResize = (event: ReactMouseEvent<HTMLElement>) => {
     if (leftNavCollapsed) {
@@ -49,8 +57,32 @@ function App() {
 
   return (
     <div className="page-wrap">
+      <div className="mobile-nav-bar" aria-label="mobile navigation actions">
+        <button
+          type="button"
+          className="mobile-nav-toggle mobile-left-nav-toggle"
+          onClick={() => setLeftNavMobileOpen((prev) => !prev)}
+          aria-label={leftNavMobileOpen ? 'Close section navigation' : 'Open section navigation'}
+          aria-expanded={leftNavMobileOpen}
+        >
+          <span className="mobile-nav-icon" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="mobile-nav-label">Menu</span>
+        </button>
+      </div>
+      {leftNavMobileOpen && (
+        <button
+          type="button"
+          className="mobile-nav-backdrop"
+          aria-label="Close section navigation overlay"
+          onClick={() => setLeftNavMobileOpen(false)}
+        />
+      )}
       <div
-        className="layout-grid"
+        className={leftNavMobileOpen ? 'layout-grid mobile-left-nav-open' : 'layout-grid'}
         style={{
           ['--left-sidebar-width' as string]: leftNavCollapsed
             ? '56px'
@@ -62,7 +94,9 @@ function App() {
           primaryPaths={sidebarContent.primaryPaths}
           siteHeader={siteHeader}
           isCollapsed={leftNavCollapsed}
+          mobileOpen={leftNavMobileOpen}
           onToggleCollapsed={() => setLeftNavCollapsed((prev) => !prev)}
+          onMobileNavigate={() => setLeftNavMobileOpen(false)}
           onResizeStart={startLeftResize}
         />
 
@@ -71,6 +105,7 @@ function App() {
             <Route path="/" element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="/quick-start" element={<QuickStartPage />} />
+
             <Route path="/synthetic-data" element={<SyntheticDataPage />} />
             <Route
               path="/synthetic-data/api"
@@ -97,6 +132,8 @@ function App() {
                 }
               />
             ))}
+            <Route path="/roboflow-workflow" element={<RoboflowWorkflowPage />} />
+            <Route path="/training-yolo-model" element={<TrainingYOLOModelPage />} />
             <Route path="/pose-estimation" element={<PoseEstimationPage />} />
             <Route
               path="/pose-estimation/api"
