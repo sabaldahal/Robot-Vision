@@ -21,6 +21,45 @@ export const overviewContent = {
   ],
 }
 
+export const landingPageContent = {
+  kicker: 'Robot Vision / Documentation Hub',
+  title: 'Synthetic Data to Pose Estimation',
+  description:
+    'Start here for the full workflow: generate synthetic spacecraft data, prepare it in Roboflow, train a pose model, and run the solver pipeline.',
+  actions: [
+    {
+      to: '/overview',
+      title: 'Overview',
+      description: 'Read the end-to-end architecture and see how the pipeline fits together.',
+    },
+    {
+      to: '/quick-start',
+      title: 'Quick Start',
+      description: 'Follow the full workflow from Blender export to pose solving.',
+    },
+    {
+      to: '/synthetic-data',
+      title: 'Synthetic Data',
+      description: 'Learn how the Blender scene, exports, and annotations are generated.',
+    },
+    {
+      to: '/pose-estimation',
+      title: 'Pose Estimation',
+      description: 'Review the YOLO + PnP solver pipeline and evaluation steps.',
+    },
+    {
+      to: '/roboflow-workflow',
+      title: 'Roboflow Workflow',
+      description: 'Upload, preprocess, and version datasets in Roboflow.',
+    },
+    {
+      to: '/training-yolo-model',
+      title: 'Training YOLO Model',
+      description: 'Train a pose-capable model and preserve the best checkpoint.',
+    },
+  ],
+}
+
 export type QuickStartSection = {
   heading: string
   body: string
@@ -64,11 +103,13 @@ export const quickStartContent: {
       body: `Run the Blender generator from the data generator directory.
 
 cd "data generator"
-blender "path/to/blender_file.blend" --background --python "main.py"
+Configure the parameters under utils/config.py. Set the output directory, number of images, and randomization settings as needed. Then run the main.py script
+to execute the generation process. Make sure you have Blender installed and accessible from the command line, and that the blender executable is in your system PATH.
+blender "path/to/BLENDER_FILE.blend" - -background - -python "main.py"
 
 The generator produces rendered frames, labels, and transformation metadata that can be reused for training and evaluation. If you want to inspect the export logic, see the dataset formatter in data generator/utils/dataformatter.py.`,
       code: `cd "data generator"
-blender "path/to/blender_file.blend" --background --python "main.py"`,
+blender "path/to/BLENDER_FILE.blend" --background --python "main.py"`,
     },
     {
       heading: '2. Prepare the dataset for Roboflow',
@@ -207,7 +248,7 @@ dataset = project.version(1).download("yolov8")`,
       title: 'Train YOLO pose model',
       description:
         'Start the training process using Ultralytics, pointing to the downloaded dataset. The training script will log metrics and save the best checkpoint.',
-      file: 'TRAIN/training/train.py',
+      file: 'TRAIN/training/train.ipynb',
       code: `from ultralytics import YOLO
 
 model = YOLO("yolov11s-pose.pt")

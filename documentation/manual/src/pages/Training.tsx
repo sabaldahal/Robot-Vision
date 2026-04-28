@@ -1,6 +1,7 @@
 import PageHomeLink from '../components/PageHomeLink'
 import { trainingYOLOModelPageContent } from '../data/siteContent'
 import CopyableCodeBlock, { ImageDisplay } from '../components/CopyableCodeBlock'
+import FlowDiagram from '../components/FlowDiagram'
 
 export default function TrainingYOLOModelPage() {
 	return (
@@ -9,11 +10,7 @@ export default function TrainingYOLOModelPage() {
 			<p className="section-kicker">{trainingYOLOModelPageContent.kicker}</p>
 			<h2>{trainingYOLOModelPageContent.title}</h2>
 			<p>{trainingYOLOModelPageContent.description}</p>
-			<div className="architecture-strip">
-				{trainingYOLOModelPageContent.stages.map((stage) => (
-					<span key={stage}>{stage}</span>
-				))}
-			</div>
+			<FlowDiagram title={trainingYOLOModelPageContent.title} steps={trainingYOLOModelPageContent.stages} />
 			<div className="step-grid">
 				{trainingYOLOModelPageContent.cards.map((card) => (
 					<article className="step-card" key={card.title}>

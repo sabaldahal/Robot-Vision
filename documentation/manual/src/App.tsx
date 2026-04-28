@@ -6,6 +6,7 @@ import { navItems } from './data/docsContent'
 import { sidebarContent, siteHeader } from './data/siteContent'
 import ConfigurationPage from './pages/ConfigurationPage'
 import StepDetailPage from './pages/StepDetailPage'
+import LandingPage from './pages/LandingPage'
 import OverviewPage from './pages/OverviewPage'
 import OutputsPage from './pages/OutputsPage'
 import PoseEstimationPage from './pages/PoseEstimationPage'
@@ -102,7 +103,7 @@ function App() {
 
         <main className="content" aria-label="documentation content">
           <Routes>
-            <Route path="/" element={<Navigate to="/overview" replace />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="/quick-start" element={<QuickStartPage />} />
 
@@ -191,7 +192,7 @@ function App() {
             <Route path="/configuration" element={<ConfigurationPage />} />
             <Route path="/outputs" element={<OutputsPage />} />
             <Route path="/troubleshooting" element={<TroubleshootingPage />} />
-            <Route path="*" element={<Navigate to="/overview" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>

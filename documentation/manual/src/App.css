@@ -1182,8 +1182,29 @@
   .api-index-card-grid,
   .artifact-grid,
   .architecture-strip,
-  .step-grid {
+  .step-grid,
+  .landing-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .flow-diagram {
+    padding: 0.85rem;
+  }
+
+  .flow-diagram-track {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-diagram-node {
+    padding: 0.85rem;
+  }
+
+  .flow-diagram-node:not(:last-child)::after {
+    top: auto;
+    right: 50%;
+    bottom: -0.65rem;
+    transform: translateX(50%);
+    content: '↓';
   }
 
   .api-index-card,
@@ -1704,6 +1725,85 @@
   max-width: none;
 }
 
+.landing-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-title {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.landing-description {
+  max-width: 68ch;
+  margin: 0.85rem 0 0;
+  color: var(--text-soft);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.landing-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.landing-badges span {
+  border: 1px solid var(--accent-border);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.4rem 0.7rem;
+}
+
+.landing-card-grid {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.landing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+}
+
+.landing-card:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.landing-card h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.landing-card p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.landing-card-cta {
+  margin-top: 0.35rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+
 .subsection-link-list {
   margin: 1rem 0 0;
   padding: 0;
@@ -1744,6 +1844,100 @@
   padding: 0.55rem;
   background: linear-gradient(180deg, var(--card), var(--card-2));
   font-weight: 600;
+}
+
+.flow-diagram {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(11, 107, 215, 0.1), transparent 32%),
+    linear-gradient(180deg, var(--card), var(--card-2));
+  box-shadow: var(--shadow-sm);
+}
+
+.flow-diagram-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.flow-diagram-kicker {
+  margin: 0;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.flow-diagram-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.flow-diagram-track {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.flow-diagram-node {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(11, 107, 215, 0.06), rgba(11, 107, 215, 0.015)),
+    var(--bg);
+}
+
+.flow-diagram-node:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  top: 50%;
+  right: -0.55rem;
+  transform: translateY(-50%);
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-border);
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.flow-diagram-index {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, var(--accent-soft), var(--card));
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-border);
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.flow-diagram-text {
+  color: var(--text);
+  line-height: 1.5;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .numbered {

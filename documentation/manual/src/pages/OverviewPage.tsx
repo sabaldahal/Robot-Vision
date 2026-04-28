@@ -1,5 +1,6 @@
 import { overviewContent } from '../data/siteContent'
 import PageHomeLink from '../components/PageHomeLink'
+import FlowDiagram from '../components/FlowDiagram'
 
 export default function OverviewPage() {
   return (
@@ -7,11 +8,7 @@ export default function OverviewPage() {
       <PageHomeLink />
       <h2>{overviewContent.title}</h2>
       <p>{overviewContent.description}</p>
-      <div className="architecture-strip">
-        {overviewContent.architectureStages.map((stage) => (
-          <span key={stage}>{stage}</span>
-        ))}
-      </div>
+      <FlowDiagram title={overviewContent.title} steps={overviewContent.architectureStages} />
     </section>
   )
 }

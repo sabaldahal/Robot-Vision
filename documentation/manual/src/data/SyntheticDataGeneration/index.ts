@@ -23,6 +23,17 @@ accuracy and robustness of pose estimation.
 `
       },
       {
+        heading: 'Keypoints Definition',
+        body: `
+Keypoints are defined as specific points of interest on the object that are used for pose estimation. In our dataset, we define a set of keypoints for each face of the
+spacecraft. These keypoints are typically chosen based on the geometry of the object and the specific features that are relevant for pose estimation.
+For example, we may define keypoints at the corners of each face, as well as additional keypoints along the edges or other distinctive features of the spacecraft. 
+The keypoints are defined in 3D space within the Blender scene, and they are projected onto the 2D image plane during annotation to provide the necessary supervision for training the pose estimation model.
+The corresponding 3D coordinates of the keypoints can be found as coords.json file. If the keypoints arrangement is changed, the corresponding 3D coordinates can be obtained
+by running the script coordinatesUtils/localcoordinates.py within blender scripting environment.
+        `
+      },
+      {
         heading: 'Data Organization in Blender',
         body: `
 The Blender file with the complete scene setup can be loaded into Blender to inspect the organization of objects and collections. The file format is .blend.
