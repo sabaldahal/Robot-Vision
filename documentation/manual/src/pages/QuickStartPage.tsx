@@ -5,6 +5,17 @@ import CopyableCodeBlock, { ImageDisplay } from '../components/CopyableCodeBlock
 import FlowDiagram from '../components/FlowDiagram'
 
 export default function QuickStartPage() {
+  const renderSectionBody = (raw: string) => {
+    console.log('SECTION BODY RAW (QuickStart):', JSON.stringify(raw))
+    const placeholder = '___LINE_BREAK_PLACEHOLDER___'
+    // Treat literal "\\n" markers and double-blank lines as manual breaks
+    const withLiteralMarkers = raw.replace(/\\n/g, placeholder)
+    const withDoubleNewlines = withLiteralMarkers.replace(/(\r?\n){2,}/g, placeholder)
+    // Collapse any remaining single newlines into spaces
+    const collapsed = withDoubleNewlines.replace(/\r?\n+/g, ' ')
+    const parts = collapsed.split(placeholder)
+    return parts.flatMap((part, idx) => (idx === 0 ? [part] : [<br key={idx} />, part]))
+  }
   return (
     <section className="doc-section">
       <PageHomeLink />
@@ -31,7 +42,7 @@ export default function QuickStartPage() {
           <article className="step-card" key={section.heading}>
             <ImageDisplay image={section.image} />
             <h3>{section.heading}</h3>
-            <p>{section.body}</p>
+            <p className="section-body">{renderSectionBody(section.body)}</p>
             <CopyableCodeBlock code={section.code} />
           </article>
         ))}

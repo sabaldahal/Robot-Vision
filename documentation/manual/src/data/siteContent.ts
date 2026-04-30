@@ -107,7 +107,20 @@ Configure the parameters under utils/config.py. Set the output directory, number
 to execute the generation process. Make sure you have Blender installed and accessible from the command line, and that the blender executable is in your system PATH.
 blender "path/to/BLENDER_FILE.blend" - -background - -python "main.py"
 
-The generator produces rendered frames, labels, and transformation metadata that can be reused for training and evaluation. If you want to inspect the export logic, see the dataset formatter in data generator/utils/dataformatter.py.`,
+The generator produces rendered frames, labels, and transformation metadata that can be reused for training and evaluation. 
+If you want to inspect the export logic, see the dataset formatter in data generator/utils/dataformatter.py.
+
+Make sure to edit the paths and parameters in the config file before running.
+Key parameters include:\n
+export_path: where the generated dataset will be saved\n
+total_images_to_generate: how many images to render\n
+image_start_index: the starting index for naming images. Set this to 0
+for a fresh dataset or to the last index + 1 if you are appending 
+to an existing dataset.\n
+export_transformation_matrices: whether to save the ground truth transformations relative to the camera.
+This is used for evaluation but not required for training.
+
+`,
       code: `cd "data generator"
 blender "path/to/BLENDER_FILE.blend" --background --python "main.py"`,
     },

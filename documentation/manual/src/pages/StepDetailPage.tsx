@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import PageHomeLink from '../components/PageHomeLink'
 import type { DocStep } from '../data/docsContent'
-import parse from 'html-react-parser'
 
 type StepDetailPageProps = {
   parentPath: string
@@ -14,6 +13,17 @@ export default function StepDetailPage({
   parentLabel,
   step,
 }: StepDetailPageProps) {
+  const renderSectionBody = (raw: string) => {
+    console.log('SECTION BODY RAW (StepDetail):', JSON.stringify(raw))
+    const placeholder = '___LINE_BREAK_PLACEHOLDER___'
+    // Treat literal "\\n" markers and double-blank lines as manual breaks
+    const withLiteralMarkers = raw.replace(/\\n/g, placeholder)
+    const withDoubleNewlines = withLiteralMarkers.replace(/(\r?\n){2,}/g, placeholder)
+    // Collapse any remaining single newlines into spaces
+    const collapsed = withDoubleNewlines.replace(/\r?\n+/g, ' ')
+    const parts = collapsed.split(placeholder)
+    return parts.flatMap((part, idx) => (idx === 0 ? [part] : [<br key={idx} />, part]))
+  }
   return (
     <section className="doc-section">
       <PageHomeLink />
@@ -37,7 +47,7 @@ export default function StepDetailPage({
       {step.sections && step.sections.map((section) => (
         <div key={section.heading} className="section-panel">
           <h3>{section.heading}</h3>
-          <p className='section-body'>{parse(section.body.replace(/\n(?!\n)/g, ' ').replace(/\\n/g, '\n').trim())}</p>
+          <p className='section-body'>{renderSectionBody(section.body)}</p>
         </div>
       ))}
 
