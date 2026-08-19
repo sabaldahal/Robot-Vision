@@ -1,6 +1,9 @@
 # Robot-Vision
 Computer Vision tools and pipelines for spacecraft robotics research.
 
+Read the documentation here.
+https://sabaldahal.github.io/Robot-Vision/
+
 This repository contains data generation, training, and inference code used to build and evaluate 6-DoF pose estimators and related tooling for robotic perception experiments.
 
 ## Contents
